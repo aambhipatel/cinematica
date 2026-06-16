@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FilmFinder - Discover cast, crew, ratings, and production metadata of your favorite movies.">
+    <title>FilmFinder | Cinematic Stats & Movie Lookup</title>
+    
+    <!-- External assets: Fonts, Tailwind CSS, FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;750;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                            950: '#060412',
+                        },
+                        accent: {
+                            imdb: '#f5c518',
+                            rotten: '#f84a25',
+                            meta: '#66cc33',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'pulse-glow': 'pulseGlow 6s infinite ease-in-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(16px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.12', transform: 'scale(1)' },
+                            '50%': { opacity: '0.25', transform: 'scale(1.08)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom layout & transition utility classes */
+        .glass {
+            background: rgba(15, 12, 33, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .search-expand {
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 0;
+            opacity: 0;
+            overflow: hidden;
+            margin-right: 0;
+        }
+
+        .search-active .search-expand {
+            width: 200px;
+            opacity: 1;
+            margin-right: 8px;
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        .circle-progress {
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .drawer-transition {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Hide default scrollbars but allow scrolling */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Hover Zoom effect */
+        .poster-hover {
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .poster-hover:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 20px 40px -15px rgba(124, 58, 237, 0.3);
+        }
+
+        /* Awards Repeating Border Animation */
+        @keyframes awardsGlow {
+            0% {
+                border-color: rgba(245, 158, 11, 0.15);
+                box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 0 0px rgba(245, 158, 11, 0);
+                background-position: 0% 50%;
+            }
+            50% {
+                border-color: rgba(245, 158, 11, 0.55);
+                box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 0 12px rgba(245, 158, 11, 0.2), inset 0 0 8px rgba(245, 158, 11, 0.12);
+                background-position: 100% 50%;
+            }
+            100% {
+                border-color: rgba(245, 158, 11, 0.15);
+                box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 0 0px rgba(245, 158, 11, 0);
+                background-position: 0% 50%;
+            }
+        }
+
+        .awards-card-active {
+            position: relative;
+            background-size: 200% 200%;
+            background-image: linear-gradient(to right, rgba(245, 158, 11, 0.02), rgba(15, 12, 33, 0.6), rgba(245, 158, 11, 0.06), rgba(15, 12, 33, 0.6));
+            animation: awardsGlow 4s infinite ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="bg-brand-950 text-slate-100 min-h-screen font-sans antialiased overflow-x-hidden">
+
+    <!-- Cinematic Ambient Background Glow elements -->
+    <div class="fixed inset-0 -z-50 overflow-hidden pointer-events-none">
+        <div class="absolute top-[-15%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-brand-600/10 blur-[130px] animate-pulse-glow"></div>
+        <div class="absolute bottom-[-15%] right-[-10%] w-[65vw] h-[65vw] rounded-full bg-blue-500/10 blur-[160px] animate-pulse-glow" style="animation-delay: -2s;"></div>
+        <div class="absolute top-[25%] right-[15%] w-[45vw] h-[45vw] rounded-full bg-purple-500/5 blur-[120px] animate-pulse-glow" style="animation-delay: -4s;"></div>
+    </div>
+
+    <!-- Navigation Header -->
+    <nav class="sticky top-0 z-40 glass border-b border-white/5 px-6 py-4 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2.5 group">
+            <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-brand-600/20 group-hover:scale-105 transition duration-300">
+                <i class="fas fa-film text-white text-sm"></i>
+            </span>
+            <span class="text-lg font-black font-display tracking-tight text-white">
+                FILM<span class="text-brand-500">FINDER</span>
+            </span>
+        </a>
+
+        <div class="flex items-center gap-4">
+            <!-- Navigation Search -->
+            <div id="searchContainer" class="relative flex items-center">
+                <form action="/search" method="GET" class="flex items-center" onsubmit="saveSearch('searchInput')">
+                    <input type="text" name="title" id="searchInput" placeholder="Search movie..."
+                        class="search-expand bg-slate-900/60 border border-white/10 rounded-full py-1.5 focus:ring-1 focus:ring-brand-500 outline-none text-xs text-white">
+                    <button type="button" onclick="toggleSearch()" id="navSearchBtn"
+                        class="w-9 h-9 rounded-full bg-white/5 hover:bg-brand-500/20 hover:text-brand-400 flex items-center justify-center transition">
+                        <i class="fas fa-search text-xs"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Stats History Trigger -->
+            <button onclick="toggleStats()" id="statsDrawerBtn"
+                class="text-xs font-bold text-slate-300 hover:text-white flex items-center gap-2 bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full border border-white/5 hover:border-white/10 transition">
+                <i class="fas fa-history text-brand-400"></i> History
+            </button>
+        </div>
+    </nav>
+
+    <!-- Search History Sidebar Drawer -->
+    <div id="statsDrawer" class="fixed inset-y-0 right-0 z-[100] w-full max-w-md bg-[#070513]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl translate-x-full drawer-transition flex flex-col">
+        <div class="flex items-center justify-between p-6 border-b border-white/5">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-400">
+                    <i class="fas fa-clock-rotate-left text-sm"></i>
+                </div>
+                <h2 class="text-lg font-bold font-display text-white">Search History</h2>
+            </div>
+            <button onclick="toggleStats()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+
+        <!-- History Content Area -->
+        <div id="historyList" class="flex-1 overflow-y-auto p-6 space-y-3 no-scrollbar">
+            <!-- Injected dynamically by Client JS -->
+        </div>
+
+        <div class="p-6 border-t border-white/5 bg-slate-950/40">
+            <button onclick="clearHistory()" id="clearHistoryBtn"
+                class="w-full py-3 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white font-bold rounded-2xl transition duration-300 flex items-center justify-center gap-2 border border-red-500/10 hover:border-transparent text-sm">
+                <i class="fas fa-trash-alt text-xs"></i> Clear Search History
+            </button>
+        </div>
+    </div>
+
+    <!-- Drawer Overlay Backing -->
+    <div id="drawerOverlay" onclick="toggleStats()" class="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm hidden"></div>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto p-6 md:p-8">
+        
+        <!-- Error Banner -->
+        <% if (error) { %>
+            <div class="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-sm animate-fade-in">
+                <i class="fas fa-exclamation-circle text-base shrink-0"></i>
+                <span class="font-semibold"><%= error %></span>
+            </div>
+        <% } %>
+
+        <% if (!movie) { %>
+            <!-- 1. HOMEPAGE / LANDING DESIGN -->
+            <div class="py-12 md:py-20 flex flex-col items-center justify-center text-center max-w-3xl mx-auto space-y-8 animate-fade-in">
+                <div class="space-y-4">
+                    <span class="px-3.5 py-1.5 rounded-full text-[10px] font-bold bg-brand-500/15 text-brand-300 border border-brand-500/25 uppercase tracking-widest inline-block">
+                        Cinematic Search Engine
+                    </span>
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black font-display tracking-tight leading-tight bg-gradient-to-b from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                        Discover Your Next Cinematic Journey
+                    </h1>
+                    <p class="text-slate-400 text-sm sm:text-base md:text-lg max-w-2xl leading-relaxed">
+                        Search, inspect, and explore reviews, top cast members, and technical details for millions of movies and shows.
+                    </p>
+                </div>
+                
+                <!-- Main Center Search Bar -->
+                <div class="w-full max-w-2xl px-4">
+                    <form action="/search" method="GET" class="relative group" onsubmit="saveSearch('heroSearchInput')">
+                        <input type="text" name="title" id="heroSearchInput" placeholder="Search movies, TV shows, actors..." required
+                            class="w-full py-4.5 pl-14 pr-32 rounded-2xl bg-slate-900/40 border border-white/10 text-white focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 transition duration-300 shadow-xl backdrop-blur-md placeholder-slate-500 text-sm">
+                        <div class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-lg group-focus-within:text-brand-400 transition">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <button type="submit" id="heroSearchSubmitBtn"
+                            class="absolute right-2.5 top-1/2 -translate-y-1/2 px-6 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl transition shadow-lg shadow-brand-600/20 text-xs uppercase tracking-wider">
+                            Search
+                        </button>
+                    </form>
+                    
+                    <!-- Popular Suggestion Tags -->
+                    <div class="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs">
+                        <span class="text-slate-500 font-semibold uppercase tracking-wider">Try searching:</span>
+                        <% const tags = ['Interstellar', 'The Dark Knight', 'Inception', 'Avatar', 'The Matrix']; %>
+                        <% tags.forEach(tag => { %>
+                            <a href="/search?title=<%= encodeURIComponent(tag) %>" class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/5 text-slate-300 hover:bg-brand-500/10 hover:border-brand-500/20 hover:text-white transition duration-200">
+                                <%= tag %>
+                            </a>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommended Showcase Section -->
+            <section class="mt-16 animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-xl md:text-2xl font-black font-display tracking-tight text-white">Recommended Spotlight</h2>
+                    <div class="h-px flex-1 bg-white/5 mx-6"></div>
+                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Handpicked Favorites</span>
+                </div>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+                    <% 
+                    const suggestions = [ 
+                        {
+                            title: 'Interstellar', 
+                            year: '2014', 
+                            genre: 'Sci-Fi, Adventure',
+                            img: 'https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg'
+                        }, 
+                        {
+                            title: 'The Dark Knight', 
+                            year: '2008', 
+                            genre: 'Action, Crime',
+                            img: 'https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg'
+                        }, 
+                        {
+                            title: 'Inception', 
+                            year: '2010', 
+                            genre: 'Action, Sci-Fi',
+                            img: 'https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg'
+                        }, 
+                        {
+                            title: 'The Matrix', 
+                            year: '1999', 
+                            genre: 'Sci-Fi, Action',
+                            img: 'https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg'
+                        }, 
+                        {
+                            title: 'Avatar', 
+                            year: '2009', 
+                            genre: 'Sci-Fi, Adventure',
+                            img: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Avatar_%282009_film%29_poster.jpg' 
+                        } 
+                    ]; 
+                    %>
+                    <% suggestions.forEach((item, idx) => { %>
+                        <a href="/search?title=<%= encodeURIComponent(item.title) %>" class="group cursor-pointer block relative">
+                            <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/5 group-hover:border-brand-500/30 transition duration-300 shadow-md mb-3 aspect-[2/3]">
+                                <img src="<%= item.img %>" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); logImageError(this.src)" class="h-full w-full object-cover group-hover:scale-105 transition duration-500">
+                                
+                                <!-- Graceful Fallback illustration if image fails -->
+                                <div class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-2xl p-4 text-center">
+                                    <div class="w-10 h-10 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400 mb-2">
+                                        <i class="fas fa-image text-sm"></i>
+                                    </div>
+                                    <p class="text-xs font-bold text-slate-300 truncate w-full"><%= item.title %></p>
+                                    <p class="text-[9px] text-slate-500 mt-1">Image Error</p>
+                                </div>
+
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/10 to-transparent opacity-60 group-hover:opacity-85 transition duration-300"></div>
+                                <!-- Play icon overlay on hover -->
+                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+                                    <span class="w-10 h-10 flex items-center justify-center rounded-full bg-brand-600/90 text-white shadow-xl shadow-brand-600/25 transform scale-75 group-hover:scale-100 transition duration-300">
+                                        <i class="fas fa-play text-xs ml-0.5"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <h4 class="font-bold truncate text-slate-200 group-hover:text-brand-400 transition text-sm">
+                                <%= item.title %>
+                            </h4>
+                            <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
+                                <span><%= item.year %></span>
+                                <span>•</span>
+                                <span><%= item.genre %></span>
+                            </div>
+                        </a>
+                    <% }) %>
+                </div>
+            </section>
+        
+        <% } else { %>
+            <!-- 2. MOVIE DETAILS INTERFACE REDESIGN -->
+            <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-8 animate-slide-up">
+                
+                <!-- Left Column (Poster & Static Meta) -->
+                <div class="lg:col-span-4 flex flex-col gap-6">
+                    <div class="relative group rounded-3xl overflow-hidden glass border border-white/10 shadow-2xl transition duration-500 hover:scale-[1.01]">
+                        <img src="<%= movie.Poster %>" onclick="openPosterModal(this.src)" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); logImageError(this.src)" class="w-full object-cover aspect-[2/3] cursor-zoom-in hover:opacity-90 transition duration-300" alt="<%= movie.Title %> Poster">
+                        
+                        <!-- Poster Fallback -->
+                        <div class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-3xl p-6 text-center space-y-3">
+                            <div class="w-16 h-16 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400">
+                                <i class="fas fa-image text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-base font-bold text-white"><%= movie.Title %></p>
+                                <p class="text-xs text-slate-500">Poster unavailable</p>
+                            </div>
+                        </div>
+
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#060412]/80 via-transparent to-transparent opacity-60"></div>
+                    </div>
+                    
+                    <!-- Quick Specs Grid -->
+                    <div class="glass p-6 rounded-3xl space-y-4">
+                        <h3 class="text-xs font-bold tracking-wider text-slate-400 uppercase">Quick Specifications</h3>
+                        <div class="grid grid-cols-2 gap-3.5">
+                            <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5">
+                                <span class="text-[9px] text-slate-500 block uppercase font-bold">Box Office</span>
+                                <span class="text-xs font-bold text-white truncate block"><%= movie.BoxOffice !== "N/A" ? movie.BoxOffice : "N/A" %></span>
+                            </div>
+                            <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5">
+                                <span class="text-[9px] text-slate-500 block uppercase font-bold">Released</span>
+                                <span class="text-xs font-bold text-white truncate block"><%= movie.Released !== "N/A" ? movie.Released : "N/A" %></span>
+                            </div>
+                            <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5">
+                                <span class="text-[9px] text-slate-500 block uppercase font-bold">Runtime</span>
+                                <% 
+                                let formattedRuntime = "N/A";
+                                if (movie.Runtime && movie.Runtime !== "N/A") {
+                                    const rawMinutes = parseInt(movie.Runtime.replace(/\D/g, ''));
+                                    if (!isNaN(rawMinutes)) {
+                                        const hrs = Math.floor(rawMinutes / 60);
+                                        const mins = rawMinutes % 60;
+                                        formattedRuntime = `${hrs > 0 ? hrs + ' hr' + (hrs > 1 ? 's ' : ' ') : ''}${mins > 0 ? mins + ' min' + (mins > 1 ? 's' : '') : ''}`.trim();
+                                    }
+                                }
+                                %>
+                                <span class="text-xs font-bold text-white truncate block"><%= formattedRuntime %></span>
+                            </div>
+                            <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5">
+                                <span class="text-[9px] text-slate-500 block uppercase font-bold">Rated</span>
+                                <span class="text-xs font-bold text-white truncate block"><span class="px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[10px] inline-block font-semibold"><%= movie.Rated !== "N/A" ? movie.Rated : "Not Rated" %></span></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Primary Action Buttons -->
+                        <div class="space-y-2 pt-2">
+                            <% if (movie.imdbID && movie.imdbID !== "N/A") { %>
+                                <a href="https://www.imdb.com/title/<%= movie.imdbID %>" target="_blank" id="imdbBtn"
+                                    class="w-full flex items-center justify-center gap-2 py-3 bg-accent-imdb hover:bg-[#e2b507] text-black font-black rounded-2xl transition duration-300 group shadow-lg shadow-accent-imdb/10 text-sm">
+                                    <i class="fab fa-imdb text-lg"></i> View on IMDb <i class="fas fa-external-link-alt text-[10px] opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition duration-200"></i>
+                                </a>
+                            <% } %>
+                            
+                            <button onclick="toggleRatings()" id="toggleRatingsBtn"
+                                class="w-full py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl border border-white/5 transition duration-300 text-sm flex items-center justify-center gap-2">
+                                <i class="fas fa-star text-xs text-brand-400"></i> <span id="toggleRatingsText">Show Ratings & Reviews</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column (Tabbed Dashboard) -->
+                <div class="lg:col-span-8 flex flex-col gap-6">
+                    
+                    <!-- Title block & plot -->
+                    <div class="glass p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+                        <div class="absolute -right-16 -top-16 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl"></div>
+                        
+                        <div>
+                            <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight font-display mb-3 text-white leading-tight">
+                                <%= movie.Title %>
+                            </h1>
+                            <div class="flex flex-wrap items-center gap-2 text-xs mb-6">
+                                <span class="text-brand-400 font-bold bg-brand-500/15 border border-brand-500/20 px-3 py-1 rounded-full"><%= movie.Year %></span>
+                                <span class="text-slate-600">•</span>
+                                <span class="text-slate-400 font-semibold"><%= movie.Genre %></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 border-l-4 border-brand-500 bg-brand-500/5 px-4 py-3 rounded-r-xl relative">
+                            <i class="fas fa-quote-left absolute -top-2 left-2 text-brand-500/20 text-3xl"></i>
+                            <p class="text-slate-300 text-sm sm:text-base leading-relaxed italic relative z-10 pl-2">
+                                <%= movie.Plot !== "N/A" ? movie.Plot : "No plot description available." %>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Awards Showcase Card -->
+                    <% 
+                    const oscarWins = movie.Oscars ? movie.Oscars.filter(item => item.won) : [];
+                    const oscarNoms = movie.Oscars ? movie.Oscars.filter(item => !item.won) : [];
+                    const hasOscars = oscarWins.length > 0 || oscarNoms.length > 0;
+                    %>
+                    <% if (hasOscars) { %>
+                        <div class="glass p-5 rounded-3xl border border-amber-500/20 flex items-center gap-4 relative overflow-hidden animate-slide-up awards-card-active">
+                            <div class="absolute -right-6 -bottom-6 text-amber-500/5 text-7xl pointer-events-none">
+                                <i class="fas fa-award"></i>
+                            </div>
+                            <div class="w-12 h-12 shrink-0 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/5">
+                                <i class="fas fa-trophy text-lg"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <span class="text-[9px] text-amber-400/80 block uppercase font-bold tracking-widest mb-0.5">Academy Awards (Oscars)</span>
+                                
+                                <% if (oscarWins.length > 0) { %>
+                                    <h4 class="text-sm font-bold text-amber-400">
+                                        Won <%= oscarWins.length %> Oscar<%= oscarWins.length > 1 ? 's' : '' %>
+                                    </h4>
+                                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                        <strong class="text-slate-400 font-semibold">Won for:</strong> 
+                                        <%= oscarWins.map(w => w.category).join(', ') %>
+                                    </p>
+                                <% } %>
+
+                                <% if (oscarNoms.length > 0) { %>
+                                    <div class="<%= oscarWins.length > 0 ? 'mt-2.5 pt-2.5 border-t border-white/5' : '' %>">
+                                        <h4 class="text-sm font-bold text-slate-400">
+                                            Nominated for <%= oscarNoms.length %> Oscar<%= oscarNoms.length > 1 ? 's' : '' %>
+                                        </h4>
+                                        <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                            <strong class="text-slate-400 font-semibold">Nominated for:</strong> 
+                                            <%= oscarNoms.map(n => n.category).join(', ') %>
+                                        </p>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% } %>
+
+                    <!-- Visual Scores Section (Radial Dials) -->
+                    <div id="ratingsSection" class="hidden glass p-6 rounded-3xl animate-fade-in">
+                        <h3 class="text-xs font-bold tracking-wider text-slate-400 uppercase mb-5">Visual Ratings Engine</h3>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            
+                            <!-- IMDb Dial -->
+                            <div class="bg-slate-950/40 p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                                <span class="text-[9px] text-slate-500 block uppercase font-bold mb-3">IMDb Rating</span>
+                                <% 
+                                    let imdbValStr = movie.imdbRating || "N/A";
+                                    let imdbPct = 0;
+                                    if (imdbValStr !== "N/A") {
+                                        imdbPct = Math.round(parseFloat(imdbValStr) * 10);
+                                    }
+                                %>
+                                <div class="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center">
+                                    <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
+                                        <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path class="text-accent-imdb" stroke-dasharray="<%= imdbPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <div class="absolute flex flex-col items-center">
+                                        <span class="text-sm sm:text-base font-black text-white"><%= imdbValStr %></span>
+                                        <span class="text-[8px] text-slate-500 font-bold">/10</span>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] text-slate-400 font-bold mt-3.5"><%= movie.imdbVotes !== "N/A" ? movie.imdbVotes : "Ratings" %></span>
+                            </div>
+
+                            <!-- Rotten Tomatoes Tomatometer -->
+                            <div class="bg-slate-950/40 p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                                <span class="text-[9px] text-slate-500 block uppercase font-bold mb-3">Tomatometer</span>
+                                <% 
+                                    let rtVal = "N/A";
+                                    let rtPct = 0;
+                                    movie.Ratings.forEach(function(r) { 
+                                        if (r.Source === "Rotten Tomatoes") {
+                                            rtVal = r.Value;
+                                            rtPct = parseInt(r.Value);
+                                        }
+                                    });
+                                %>
+                                <div class="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center">
+                                    <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
+                                        <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path class="text-accent-rotten" stroke-dasharray="<%= isNaN(rtPct) ? 0 : rtPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <div class="absolute flex flex-col items-center">
+                                        <span class="text-sm sm:text-base font-black text-white"><%= rtVal %></span>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] text-slate-400 font-bold mt-3.5">Critics Score</span>
+                            </div>
+
+                            <!-- TMDB User/Audience Score -->
+                            <div class="bg-slate-950/40 p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                                <span class="text-[9px] text-slate-500 block uppercase font-bold mb-3">Audience Score</span>
+                                <% 
+                                    let tmdbVal = movie.tmdbRating || "N/A";
+                                    let tmdbPct = 0;
+                                    if (tmdbVal !== "N/A") {
+                                        tmdbPct = Math.round(parseFloat(tmdbVal) * 10);
+                                    }
+                                    let tmdbVotes = movie.tmdbVoteCount || "N/A";
+                                %>
+                                <div class="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center">
+                                    <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
+                                        <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path class="text-brand-500" stroke-dasharray="<%= tmdbPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <div class="absolute flex flex-col items-center">
+                                        <span class="text-sm sm:text-base font-black text-white"><%= tmdbVal !== "N/A" ? tmdbPct + "%" : "N/A" %></span>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] text-slate-400 font-bold mt-3.5"><%= tmdbVotes !== "N/A" ? tmdbVotes + " votes" : "User Rating" %></span>
+                            </div>
+
+                            <!-- Metacritic Score -->
+                            <div class="bg-slate-950/40 p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                                <span class="text-[9px] text-slate-500 block uppercase font-bold mb-3">Metacritic</span>
+                                <% 
+                                    let metaVal = movie.Metascore || "N/A";
+                                    let metaPct = 0;
+                                    if (metaVal !== "N/A") {
+                                        metaPct = parseInt(metaVal);
+                                    }
+                                %>
+                                <div class="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center">
+                                    <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
+                                        <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path class="text-accent-meta" stroke-dasharray="<%= metaPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <div class="absolute flex flex-col items-center">
+                                        <span class="text-sm sm:text-base font-black text-white"><%= metaVal %></span>
+                                        <span class="text-[8px] text-slate-500 font-bold">/100</span>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] text-slate-400 font-bold mt-3.5">Metascore</span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Custom Dashboard Tab Controls -->
+                    <div class="glass rounded-3xl overflow-hidden flex flex-col flex-1">
+                        <!-- Navigation Headers -->
+                        <div class="flex border-b border-white/5 bg-slate-900/30 p-2 gap-1 overflow-x-auto no-scrollbar">
+                            <button onclick="switchTab('castTab')" id="btn-castTab" class="tab-btn flex-1 py-3 px-4 text-xs font-bold rounded-2xl transition duration-300 text-white bg-brand-500/10 border border-brand-500/20 whitespace-nowrap">
+                                <i class="fas fa-users mr-1.5"></i> Cast & Crew
+                            </button>
+                            <button onclick="switchTab('reviewsTab')" id="btn-reviewsTab" class="tab-btn flex-1 py-3 px-4 text-xs font-semibold rounded-2xl transition duration-300 text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap">
+                                <i class="fas fa-star mr-1.5"></i> Review Details
+                            </button>
+                            <button onclick="switchTab('metaTab')" id="btn-metaTab" class="tab-btn flex-1 py-3 px-4 text-xs font-semibold rounded-2xl transition duration-300 text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap">
+                                <i class="fas fa-info-circle mr-1.5"></i> Specifications
+                            </button>
+                        </div>
+                        
+                        <!-- Panel Body -->
+                        <div class="p-6 md:p-8 flex-1">
+                            
+                            <!-- Panel 1: Cast & Crew -->
+                            <div id="castTab" class="tab-content block space-y-6">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div class="bg-slate-950/30 border border-white/5 rounded-2xl p-4.5">
+                                        <h4 class="text-[9px] uppercase tracking-widest text-slate-500 font-bold mb-1">Director</h4>
+                                        <p class="text-base font-bold text-white">
+                                            <%= movie.Director !== "N/A" ? movie.Director : "Unknown" %>
+                                        </p>
+                                    </div>
+                                    <div class="bg-slate-950/30 border border-white/5 rounded-2xl p-4.5">
+                                        <h4 class="text-[9px] uppercase tracking-widest text-slate-500 font-bold mb-1">Writer</h4>
+                                        <p class="text-base font-bold text-white truncate" title="<%= movie.Writer %>">
+                                            <%= movie.Writer !== "N/A" ? movie.Writer : "Unknown" %>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Top Cast Details</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                        <% if (movie.DetailedCast && movie.DetailedCast.length > 0) { 
+                                            movie.DetailedCast.forEach(actor => { 
+                                        %>
+                                            <div class="bg-slate-950/20 rounded-2xl border border-white/5 p-3 flex items-center gap-3.5 hover:bg-slate-900/40 hover:border-white/10 transition duration-300 group">
+                                                <% if (actor.profile_path) { %>
+                                                    <div class="w-12 h-12 shrink-0 rounded-full overflow-hidden bg-slate-800 border-2 border-white/5 group-hover:border-brand-500/50 transition duration-300">
+                                                        <img src="https://image.tmdb.org/t/p/w185<%= actor.profile_path %>" alt="<%= actor.name %>" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); logImageError(this.src)" class="w-full h-full object-cover">
+                                                        <div class="hidden w-full h-full bg-brand-500/10 flex items-center justify-center text-brand-300 font-bold text-sm">
+                                                            <%= actor.name.split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase() %>
+                                                        </div>
+                                                    </div>
+                                                <% } else { %>
+                                                    <div class="w-12 h-12 shrink-0 rounded-full bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-300 font-bold text-sm">
+                                                        <%= actor.name.split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase() %>
+                                                    </div>
+                                                <% } %>
+                                                <div class="min-w-0 flex-1">
+                                                    <h5 class="font-bold text-white truncate group-hover:text-brand-400 transition text-sm"><%= actor.name %></h5>
+                                                    <p class="text-xs text-slate-500 truncate mt-0.5"><%= actor.character %></p>
+                                                </div>
+                                            </div>
+                                        <% }); } else { 
+                                            const fallbackActors = (movie.Actors && movie.Actors !== "N/A") ? movie.Actors.split(', ') : [];
+                                            if (fallbackActors.length > 0) {
+                                                fallbackActors.forEach(actor => { 
+                                        %>
+                                                <div class="bg-slate-950/20 rounded-2xl border border-white/5 p-3 flex items-center gap-3.5 hover:bg-slate-900/40 hover:border-white/10 transition duration-300 group">
+                                                    <div class="w-12 h-12 shrink-0 rounded-full bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-300 font-bold text-sm">
+                                                        <%= actor.split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase() %>
+                                                    </div>
+                                                    <div class="min-w-0 flex-1">
+                                                        <h5 class="font-bold text-white truncate group-hover:text-brand-400 transition text-sm"><%= actor %></h5>
+                                                        <p class="text-xs text-slate-500 truncate mt-0.5">Actor</p>
+                                                    </div>
+                                                </div>
+                                        <% }); } else { %>
+                                            <p class="text-slate-500 col-span-full text-center py-6 text-xs">No cast information available.</p>
+                                        <% } } %>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Panel 2: Review List -->
+                            <div id="reviewsTab" class="tab-content hidden space-y-4">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Critic Ratings Scores</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <% movie.Ratings.forEach(function(r) { %>
+                                        <div class="bg-slate-950/30 border border-white/5 rounded-2xl p-5 flex items-center justify-between hover:bg-slate-900/45 transition">
+                                            <div class="flex items-center gap-3">
+                                                <% if (r.Source === "Internet Movie Database") { %>
+                                                    <span class="flex items-center justify-center w-9 h-9 rounded-xl bg-accent-imdb text-black font-extrabold text-[10px]">IMDB</span>
+                                                <% } else if (r.Source === "Rotten Tomatoes") { %>
+                                                    <span class="flex items-center justify-center w-9 h-9 rounded-xl bg-accent-rotten text-white font-extrabold text-[10px]">TOM</span>
+                                                <% } else if (r.Source === "Metacritic") { %>
+                                                    <span class="flex items-center justify-center w-9 h-9 rounded-xl bg-accent-meta text-white font-extrabold text-[10px]">META</span>
+                                                <% } else { %>
+                                                    <span class="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-800 text-white font-bold text-xs"><i class="fas fa-star"></i></span>
+                                                <% } %>
+                                                <div>
+                                                    <h5 class="font-bold text-white text-sm"><%= r.Source %></h5>
+                                                    <p class="text-[10px] text-slate-500">Official Rating</p>
+                                                </div>
+                                            </div>
+                                            <span class="text-lg font-black text-white"><%= r.Value %></span>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            </div>
+
+                            <!-- Panel 3: Technical Spec Details -->
+                            <div id="metaTab" class="tab-content hidden space-y-4">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Specifications & Metadata</h4>
+                                <div class="bg-slate-950/20 border border-white/5 rounded-2xl overflow-hidden">
+                                    <table class="w-full text-xs text-left">
+                                        <tbody>
+                                            <tr class="border-b border-white/5">
+                                                <th class="px-5 py-3.5 text-slate-400 font-semibold bg-slate-950/20 w-1/3">Language</th>
+                                                <td class="px-5 py-3.5 text-white font-semibold"><%= movie.Language !== "N/A" ? movie.Language : "N/A" %></td>
+                                            </tr>
+                                            <tr class="border-b border-white/5">
+                                                <th class="px-5 py-3.5 text-slate-400 font-semibold bg-slate-950/20">Country</th>
+                                                <td class="px-5 py-3.5 text-white font-semibold"><%= movie.Country !== "N/A" ? movie.Country : "N/A" %></td>
+                                            </tr>
+                                            <tr class="border-b border-white/5">
+                                                <th class="px-5 py-3.5 text-slate-400 font-semibold bg-slate-950/20">Awards</th>
+                                                <td class="px-5 py-3.5 text-white font-semibold leading-relaxed"><%= movie.Awards !== "N/A" ? movie.Awards : "None" %></td>
+                                            </tr>
+                                            <tr class="border-b border-white/5">
+                                                <th class="px-5 py-3.5 text-slate-400 font-semibold bg-slate-950/20">Production</th>
+                                                <td class="px-5 py-3.5 text-white font-semibold"><%= movie.Production !== "N/A" ? movie.Production : "N/A" %></td>
+                                            </tr>
+                                            <tr>
+                                                <th class="px-5 py-3.5 text-slate-400 font-semibold bg-slate-950/20">Release Type</th>
+                                                <td class="px-5 py-3.5 text-white font-semibold capitalize"><%= movie.Type !== "N/A" ? movie.Type : "N/A" %></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-20 border-t border-white/5 bg-[#060412]/60 py-8 px-6 text-center text-xs text-slate-500">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>© 2026 FilmFinder. All rights reserved. Cinematic metadata aggregated from OMDB and TMDB APIs.</p>
+            <div class="flex gap-4">
+                <a href="/" class="hover:text-brand-400 transition">Home</a>
+                <span class="text-slate-800">|</span>
+                <button onclick="toggleStats()" class="hover:text-brand-400 transition">View Search Logs</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Client-Side Logic Scripts -->
+    <script>
+        /* 1. Navbar Search Expandable Action */
+        function toggleSearch() {
+            const container = document.getElementById('searchContainer');
+            const input = document.getElementById('searchInput');
+            
+            if (container.classList.contains('search-active')) {
+                if (input.value.trim() !== "") {
+                    saveSearch('searchInput');
+                    input.closest('form').submit();
+                } else {
+                    container.classList.remove('search-active');
+                }
+            } else {
+                container.classList.add('search-active');
+                input.focus();
+            }
+        }
+
+        /* 2. Local Storage and Search Log Manager */
+        function saveSearch(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const title = input.value.trim();
+            if (!title) return;
+            
+            let history = JSON.parse(localStorage.getItem('searchHistory') || "[]");
+            
+            /* Add to start, filtering out previous instances of same search term */
+            history = history.filter(item => item.toLowerCase() !== title.toLowerCase());
+            history.unshift(title);
+            if (history.length > 10) history.pop(); /* Keep 10 most recent */
+            localStorage.setItem('searchHistory', JSON.stringify(history));
+        }
+
+        function toggleStats() {
+            const drawer = document.getElementById('statsDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            
+            const isOpen = !drawer.classList.contains('translate-x-full');
+            
+            if (isOpen) {
+                drawer.classList.add('translate-x-full');
+                overlay.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            } else {
+                drawer.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+                renderHistory();
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag)
+            );
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            const history = JSON.parse(localStorage.getItem('searchHistory') || "[]");
+
+            if (history.length === 0) {
+                list.innerHTML = `
+                    <div class="flex flex-col items-center justify-center text-center py-12 space-y-3">
+                        <div class="w-12 h-12 rounded-full bg-slate-900/60 border border-white/5 flex items-center justify-center text-slate-500">
+                            <i class="fas fa-history text-sm"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-bold text-slate-300">No recent searches</h5>
+                            <p class="text-xs text-slate-500">Your query history is empty.</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = history.map(item => `
+                <div class="flex items-center justify-between bg-slate-900/60 border border-white/5 p-3.5 rounded-2xl hover:border-brand-500/20 transition group">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <i class="fas fa-search text-xs text-slate-500 group-hover:text-brand-400 transition"></i>
+                        <span class="font-bold text-slate-200 text-sm truncate pr-2">${escapeHTML(item)}</span>
+                    </div>
+                    <a href="/search?title=${encodeURIComponent(item)}"
+                        class="px-3.5 py-1.5 text-xs bg-brand-500/10 hover:bg-brand-500 text-brand-400 hover:text-white rounded-xl font-bold transition">
+                        Inspect
+                    </a>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('searchHistory');
+            renderHistory();
+        }
+
+        /* 3. Tab Swapping Control */
+        function switchTab(tabId) {
+            // Un-hide ratings dials if they click reviews tab
+            if (tabId === 'reviewsTab') {
+                const ratingsSec = document.getElementById('ratingsSection');
+                if (ratingsSec && ratingsSec.classList.contains('hidden')) {
+                    ratingsSec.classList.remove('hidden');
+                    const btnText = document.getElementById('toggleRatingsText');
+                    if (btnText) btnText.textContent = "Hide Ratings & Reviews";
+                }
+            }
+
+            // Hide all tab components
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('block');
+            });
+            
+            // Activate selected tab body
+            const target = document.getElementById(tabId);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('block');
+            }
+            
+            // De-select all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn flex-1 py-3 px-4 text-xs font-semibold rounded-2xl transition duration-300 text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap";
+            });
+            
+            // Apply selection styling to active button
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.className = "tab-btn flex-1 py-3 px-4 text-xs font-bold rounded-2xl transition duration-300 text-white bg-brand-500/10 border border-brand-500/20 whitespace-nowrap";
+            }
+        }
+
+        /* 4. Toggle Ratings visibility */
+        function toggleRatings() {
+            const ratingsSec = document.getElementById('ratingsSection');
+            const btnText = document.getElementById('toggleRatingsText');
+            if (!ratingsSec) return;
+            
+            if (ratingsSec.classList.contains('hidden')) {
+                ratingsSec.classList.remove('hidden');
+                if (btnText) btnText.textContent = "Hide Ratings & Reviews";
+            } else {
+                ratingsSec.classList.add('hidden');
+                if (btnText) btnText.textContent = "Show Ratings & Reviews";
+            }
+        }
+
+        /* 5. Client-side Log reporting for broken images */
+        function logImageError(src) {
+            fetch('/log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `Image failed to load: ${src}` })
+            }).catch(console.error);
+        }
+
+        /* 6. Fullscreen Poster Modal Controls */
+        function openPosterModal(src) {
+            const modal = document.getElementById('posterModal');
+            const img = document.getElementById('modalPosterImg');
+            if (!modal || !img) return;
+
+            img.src = src;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Allow CSS transition to compile
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+                img.classList.remove('scale-95');
+                img.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closePosterModal() {
+            const modal = document.getElementById('posterModal');
+            const img = document.getElementById('modalPosterImg');
+            if (!modal || !img) return;
+
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0');
+            img.classList.remove('scale-100');
+            img.classList.add('scale-95');
+
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300);
+        }
+    </script>
+
+    <!-- Poster Fullscreen Modal Overlay -->
+    <div id="posterModal" onclick="closePosterModal()" class="fixed inset-0 z-[110] bg-black/90 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 items-center justify-center cursor-zoom-out">
+        <button onclick="closePosterModal()" class="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white text-lg transition border border-white/10">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="modalPosterImg" src="" class="max-h-[85vh] max-w-[90vw] object-contain rounded-2xl shadow-2xl border border-white/15 transform scale-95 transition-transform duration-300">
+    </div>
+</body>
+
+</html>
