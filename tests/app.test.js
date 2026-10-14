@@ -1,5 +1,5 @@
 const request = require('supertest');
-const { app, loadOscarData, searchCache, getOscarIndex, getRandomSpotlight, getImdbTop100 } = require('../app');
+const { app, loadOscarData, searchCache, getOscarIndex, getRandomSpotlight, getImdbTop100, searchKey } = require('../app');
 
 beforeAll(async () => {
     // Ensure Oscar database is indexed prior to running tests
@@ -139,7 +139,7 @@ describe('LRU Cache Behavior', () => {
             DetailedCast: []
         };
 
-        searchCache.set('unit test film', mockMovie);
+        searchCache.set(searchKey('unit test film'), mockMovie);
 
         const res = await request(app).get('/search?title=Unit+Test+Film');
         expect(res.status).toBe(200);

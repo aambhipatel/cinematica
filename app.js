@@ -9,6 +9,7 @@ const pino = require('pino');
 const pinoHttp = require('pino-http');
 const { randomUUID } = require('crypto');
 require('dotenv').config();
+const { createAggregation, searchKey, validId, formatWatchTime } = require('./aggregation');
 
 // --- Production Structured Logger ---
 const logger = pino({
@@ -30,7 +31,7 @@ if (!API_KEY && process.env.NODE_ENV !== 'test') {
     logger.warn('OMDB_API_KEY is not defined in environment variables! External film lookups will fail.');
 }
 if (!TMDB_KEY && process.env.NODE_ENV !== 'test') {
-    logger.warn('TMDB_API_KEY is not defined in environment variables! TMDB cast details will be skipped.');
+    logger.warn('TMDB_API_KEY is not defined in environment variables! Optional TMDB enrichment will be skipped.');
 }
 
 // --- Outbound HTTP Client with Resilient Timeouts ---
@@ -47,6 +48,7 @@ const searchCache = new LRUCache({
     max: 500, // Store up to 500 unique movie search results
     ttl: 1000 * 60 * 60 // 1 hour TTL
 });
+const aggregation = createAggregation({ httpClient, cache: searchCache, logger });
 
 // --- In-Memory Fast Oscar Database Indexing (O(1) Map) ---
 let oscarData = [];
@@ -138,7 +140,7 @@ app.use(helmet({
             scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-            imgSrc: ["'self'", "data:", "https://m.media-amazon.com", "https://image.tmdb.org", "https://upload.wikimedia.org", "https://images.unsplash.com"],
+            imgSrc: ["'self'", "data:", "https://m.media-amazon.com", "https://image.tmdb.org", "https://www.themoviedb.org", "https://static.tvmaze.com", "https://upload.wikimedia.org", "https://images.unsplash.com"],
             connectSrc: ["'self'"]
         }
     },
@@ -162,9 +164,9 @@ const searchLimiter = rateLimit({
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     handler: (req, res) => {
-        res.status(429).render('index', { 
-            movie: null, 
-            error: "Too many search requests. Please slow down and try again shortly." 
+        res.status(429).render('index', {
+            movie: null,
+            error: "Too many search requests. Please slow down and try again shortly."
         });
     }
 });
@@ -181,6 +183,38 @@ const logLimiter = rateLimit({
 app.use(express.json({ limit: '10kb' }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
+app.locals.formatWatchTime = formatWatchTime;
+
+const episodeLimiter = rateLimit({
+    windowMs: 60 * 1000, max: 30, standardHeaders: 'draft-7', legacyHeaders: false,
+    handler: (req, res) => res.status(429).json({ error: { code: 'RATE_LIMITED', message: 'Too many episode requests. Please try again shortly.' } })
+});
+const apiError = (res, status, code, message) => res.status(status).json({ error: { code, message } });
+function validateEpisodeRoute(req, res, next) {
+    if (!validId(req.params.imdbId)) return apiError(res, 400, 'INVALID_ID', 'Use an IMDb title ID, such as tt0944947.');
+    if (req.params.n !== undefined && (!/^(0|[1-9]\d{0,2})$/.test(req.params.n) || Number(req.params.n) > 200)) {
+        return apiError(res, 400, 'INVALID_SEASON', 'Season must be an integer from 0 to 200.');
+    }
+    next();
+}
+async function episodeRoute(req, res) {
+    try {
+        const context = await aggregation.resolveTitle(req.params.imdbId, req.log);
+        if (!context.movie) return apiError(res, context.partial ? 502 : 404, context.partial ? 'SOURCE_UNAVAILABLE' : 'NOT_FOUND', 'Could not load this title. Please retry.');
+        if (!context.isTV) return apiError(res, 404, 'NOT_A_SERIES', 'This title has no TV seasons.');
+        req.log.info({ imdbId: req.params.imdbId, season: req.params.n, event: 'episode_guide_request' }, 'Episode guide requested');
+        if (req.params.n === undefined) return res.json({ imdbId: req.params.imdbId, seasons: context.seasons, partial: context.partial });
+        const result = await aggregation.getSeason(req.params.imdbId, Number(req.params.n), context, { enrich: true });
+        if (result.notFound) return apiError(res, 404, 'SEASON_NOT_FOUND', 'This season is not listed for this title.');
+        if (result.unavailable) return apiError(res, 502, 'SOURCE_UNAVAILABLE', "Couldn't load episodes for this season. Please retry.");
+        res.json({ imdbId: req.params.imdbId, ...result });
+    } catch {
+        req.log.warn({ event: 'episode_guide_error' }, 'Episode guide failed');
+        apiError(res, 502, 'SOURCE_UNAVAILABLE', "Couldn't load episodes. Please retry.");
+    }
+}
+app.get('/api/title/:imdbId/seasons', episodeLimiter, validateEpisodeRoute, episodeRoute);
+app.get('/api/title/:imdbId/seasons/:n', episodeLimiter, validateEpisodeRoute, episodeRoute);
 
 // --- Health & Readiness Probes ---
 app.get('/healthz', (req, res) => {
@@ -191,8 +225,8 @@ app.get('/readyz', (req, res) => {
     if (oscarIndex.size === 0) {
         return res.status(503).json({ status: 'unready', reason: 'Oscar database index not yet loaded' });
     }
-    res.status(200).json({ 
-        status: 'ready', 
+    res.status(200).json({
+        status: 'ready',
         indexedMovies: oscarIndex.size,
         cacheEntries: searchCache.size
     });
@@ -219,8 +253,8 @@ app.post('/log', logLimiter, (req, res) => {
 
 // --- Main Routes ---
 app.get('/', (req, res) => {
-    res.render('index', { 
-        movie: null, 
+    res.render('index', {
+        movie: null,
         error: null,
         spotlight: getRandomSpotlight(5),
         allTop100: imdbTop100
@@ -233,18 +267,18 @@ app.get('/api/spotlight', (req, res) => {
 
 app.get('/search', searchLimiter, async (req, res) => {
     const rawTitle = req.query.title;
-    
+
     // Strict input validation
     if (!rawTitle || typeof rawTitle !== 'string' || rawTitle.trim().length === 0) {
         return res.status(400).render('index', { movie: null, error: "Please enter a valid movie title." });
     }
-    
+
     const movieTitle = rawTitle.trim();
     if (movieTitle.length > 100) {
         return res.status(400).render('index', { movie: null, error: "Search query is too long (maximum 100 characters)." });
     }
 
-    const cacheKey = movieTitle.toLowerCase();
+    const cacheKey = searchKey(movieTitle);
     const cachedResult = searchCache.get(cacheKey);
     if (cachedResult) {
         req.log.info({ cacheHit: true, title: movieTitle }, 'Cache hit resolving movie search');
@@ -259,76 +293,25 @@ app.get('/search', searchLimiter, async (req, res) => {
                 apikey: API_KEY
             }
         });
-        
+
         if (response.data.Response === "False") {
             req.log.warn({ title: movieTitle }, 'Upstream OMDb reported movie not found');
             return res.render('index', { movie: null, error: "Movie not found!" });
         }
-        
-        let castData = [];
+
         const imdbId = response.data.imdbID;
-
-        if (imdbId && imdbId !== "N/A" && TMDB_KEY) {
-            try {
-                const findRes = await httpClient.get(`https://api.themoviedb.org/3/find/${encodeURIComponent(imdbId)}`, {
-                    params: {
-                        external_source: 'imdb_id',
-                        api_key: TMDB_KEY
-                    }
-                });
-                
-                let tmdbId = null;
-                let isMovie = true;
-                let tmdbMovie = null;
-
-                if (findRes.data.movie_results && findRes.data.movie_results.length > 0) {
-                    tmdbMovie = findRes.data.movie_results[0];
-                    tmdbId = tmdbMovie.id;
-                    isMovie = true;
-                } else if (findRes.data.tv_results && findRes.data.tv_results.length > 0) {
-                    tmdbMovie = findRes.data.tv_results[0];
-                    tmdbId = tmdbMovie.id;
-                    isMovie = false;
-                }
-
-                if (tmdbId) {
-                    const mediaType = isMovie ? 'movie' : 'tv';
-                    const detailRes = await httpClient.get(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}`, {
-                        params: { 
-                            api_key: TMDB_KEY,
-                            append_to_response: 'credits'
-                        }
-                    });
-                    const tmdbData = detailRes.data;
-                    castData = (tmdbData.credits && tmdbData.credits.cast ? tmdbData.credits.cast : []).slice(0, 8);
-                    response.data.tmdbRating = tmdbData.vote_average || tmdbMovie.vote_average;
-                    response.data.tmdbVoteCount = tmdbData.vote_count || tmdbMovie.vote_count;
-                    
-                    if (isMovie && tmdbData.budget && tmdbData.budget > 0) {
-                        response.data.Budget = '$' + Number(tmdbData.budget).toLocaleString();
-                    }
-                    if (tmdbData.production_companies && tmdbData.production_companies.length > 0) {
-                        response.data.Studio = tmdbData.production_companies[0].name;
-                    } else if (tmdbData.networks && tmdbData.networks.length > 0) {
-                        response.data.Studio = tmdbData.networks[0].name;
-                    }
-                }
-            } catch (tmdbError) {
-                req.log.warn({ err: tmdbError.message }, 'Non-fatal degradation during TMDB query');
-            }
-        }
+        const populated = await aggregation.enrichMovie(response.data, req.log);
 
         // O(1) Instant Oscar lookup via in-memory Map
         const oscars = (imdbId && imdbId !== "N/A") ? (oscarIndex.get(imdbId) || []) : [];
-        response.data.Oscars = oscars;
-        response.data.DetailedCast = castData;
+        populated.Oscars = oscars;
 
         // Store populated movie in LRU Cache
-        searchCache.set(cacheKey, response.data);
+        aggregation.remember(cacheKey, populated, populated.Partial);
 
-        res.render('index', { movie: response.data, error: null });
+        res.render('index', { movie: populated, error: null });
     } catch (error) {
-        req.log.error({ err: error.message }, 'Fatal error during external movie search');
+        req.log.error({ status: error.response?.status || null }, 'Fatal error during external movie search');
         res.status(500).render('index', { movie: null, error: "Error fetching data. Please try again later." });
     }
 });
@@ -378,5 +361,9 @@ module.exports = {
     getOscarIndex: () => oscarIndex,
     getRandomSpotlight,
     getImdbTop100: () => imdbTop100,
-    logger
+    logger,
+    aggregation,
+    httpClient,
+    searchKey,
+    episodeLimiter
 };
