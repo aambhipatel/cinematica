@@ -1,10 +1,12 @@
 {
-  "name": "movielookup",
-  "version": "1.0.0",
+  "name": "cinescope",
+  "version": "2.1.0",
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "dev": "node --watch app.js",
+    "test": "jest --detectOpenHandles --forceExit"
   },
   "keywords": [],
   "author": "",
@@ -12,9 +14,17 @@
   "type": "commonjs",
   "dependencies": {
     "axios": "^1.13.4",
-    "cheerio": "^1.2.0",
     "dotenv": "^17.4.1",
     "ejs": "^4.0.1",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "lru-cache": "^11.5.3",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2",
+    "supertest": "^7.3.0"
   }
 }

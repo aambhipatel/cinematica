@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="FilmFinder - Discover cast, crew, ratings, and production metadata of your favorite movies.">
-    <title>FilmFinder | Cinematic Stats & Movie Lookup</title>
+    <meta name="description" content="CineScope - Discover cast, crew, ratings, and production metadata of your favorite movies.">
+    <title>CineScope | Cinematic Stats & Movie Lookup</title>
     
     <!-- External assets: Fonts, Tailwind CSS, FontAwesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;750;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -21,7 +21,7 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        sans: ['Outfit', 'system-ui', 'sans-serif'],
                         display: ['Outfit', 'sans-serif'],
                     },
                     colors: {
@@ -59,8 +59,8 @@
                             '100%': { transform: 'translateY(0)', opacity: '1' },
                         },
                         pulseGlow: {
-                            '0%, 100%': { opacity: '0.12', transform: 'scale(1)' },
-                            '50%': { opacity: '0.25', transform: 'scale(1.08)' },
+                            '0%, 100%': { opacity: '0.08', transform: 'scale(1)' },
+                            '50%': { opacity: '0.15', transform: 'scale(1.04)' },
                         }
                     }
                 }
@@ -69,6 +69,33 @@
     </script>
     
     <style>
+        /* Browser surface styling */
+        ::selection {
+            background-color: rgba(139, 92, 246, 0.35);
+            color: #ffffff;
+        }
+
+        :root {
+            caret-color: #a78bfa;
+        }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #060412;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.14);
+            border-radius: 9999px;
+            border: 2px solid #060412;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(167, 139, 250, 0.4);
+        }
+
         /* Custom layout & transition utility classes */
         .glass {
             background: rgba(15, 12, 33, 0.5);
@@ -83,6 +110,10 @@
             opacity: 0;
             overflow: hidden;
             margin-right: 0;
+            padding-left: 0;
+            padding-right: 0;
+            border-color: transparent;
+            pointer-events: none;
         }
 
         .search-active .search-expand {
@@ -91,6 +122,8 @@
             margin-right: 8px;
             padding-left: 12px;
             padding-right: 12px;
+            border-color: rgba(255, 255, 255, 0.1);
+            pointer-events: auto;
         }
 
         .circle-progress {
@@ -100,6 +133,7 @@
 
         .drawer-transition {
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform;
         }
 
         /* Hide default scrollbars but allow scrolling */
@@ -153,53 +187,53 @@
 
     <!-- Cinematic Ambient Background Glow elements -->
     <div class="fixed inset-0 -z-50 overflow-hidden pointer-events-none">
-        <div class="absolute top-[-15%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-brand-600/10 blur-[130px] animate-pulse-glow"></div>
+        <div class="absolute top-[-25%] left-[-20%] w-[50vw] h-[50vw] rounded-full bg-brand-600/5 blur-[150px] animate-pulse-glow"></div>
         <div class="absolute bottom-[-15%] right-[-10%] w-[65vw] h-[65vw] rounded-full bg-blue-500/10 blur-[160px] animate-pulse-glow" style="animation-delay: -2s;"></div>
         <div class="absolute top-[25%] right-[15%] w-[45vw] h-[45vw] rounded-full bg-purple-500/5 blur-[120px] animate-pulse-glow" style="animation-delay: -4s;"></div>
     </div>
 
     <!-- Navigation Header -->
     <nav class="sticky top-0 z-40 glass border-b border-white/5 px-6 py-4 flex items-center justify-between">
-        <a href="/" class="flex items-center gap-2.5 group">
+        <a href="/" class="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950 rounded-xl">
             <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-brand-600/20 group-hover:scale-105 transition duration-300">
                 <i class="fas fa-film text-white text-sm"></i>
             </span>
             <span class="text-lg font-black font-display tracking-tight text-white">
-                FILM<span class="text-brand-500">FINDER</span>
+                CINE<span class="text-brand-500">SCOPE</span>
             </span>
         </a>
 
         <div class="flex items-center gap-4">
             <!-- Navigation Search -->
             <div id="searchContainer" class="relative flex items-center">
-                <form action="/search" method="GET" class="flex items-center" onsubmit="saveSearch('searchInput')">
-                    <input type="text" name="title" id="searchInput" placeholder="Search movie..."
-                        class="search-expand bg-slate-900/60 border border-white/10 rounded-full py-1.5 focus:ring-1 focus:ring-brand-500 outline-none text-xs text-white">
-                    <button type="button" onclick="toggleSearch()" id="navSearchBtn"
-                        class="w-9 h-9 rounded-full bg-white/5 hover:bg-brand-500/20 hover:text-brand-400 flex items-center justify-center transition">
+                <form action="/search" method="GET" id="navSearchForm" class="flex items-center" onsubmit="saveSearch('searchInput')">
+                    <input type="text" name="title" id="searchInput" placeholder="Search movie..." aria-label="Search movie query" autocomplete="off"
+                        class="search-expand bg-slate-900/60 border border-white/10 rounded-full py-1.5 focus:ring-1 focus:ring-brand-500 outline-none text-xs text-white placeholder-slate-400">
+                    <button type="button" onclick="toggleSearch()" id="navSearchBtn" aria-label="Expand search bar"
+                        class="w-9 h-9 rounded-full bg-white/5 hover:bg-brand-500/20 hover:text-brand-400 flex items-center justify-center transition cursor-pointer text-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
                         <i class="fas fa-search text-xs"></i>
                     </button>
                 </form>
             </div>
 
             <!-- Stats History Trigger -->
-            <button onclick="toggleStats()" id="statsDrawerBtn"
-                class="text-xs font-bold text-slate-300 hover:text-white flex items-center gap-2 bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full border border-white/5 hover:border-white/10 transition">
+            <button type="button" onclick="toggleStats()" id="statsDrawerBtn" aria-label="Open search history" aria-controls="statsDrawer" aria-expanded="false"
+                class="text-xs font-bold text-slate-300 hover:text-white flex items-center gap-2 bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full border border-white/5 hover:border-white/10 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
                 <i class="fas fa-history text-brand-400"></i> History
             </button>
         </div>
     </nav>
 
     <!-- Search History Sidebar Drawer -->
-    <div id="statsDrawer" class="fixed inset-y-0 right-0 z-[100] w-full max-w-md bg-[#070513]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl translate-x-full drawer-transition flex flex-col">
+    <div id="statsDrawer" role="dialog" aria-modal="true" aria-labelledby="historyDrawerHeading" class="fixed inset-y-0 right-0 z-[100] w-full max-w-md bg-[#070513]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl translate-x-full drawer-transition flex flex-col">
         <div class="flex items-center justify-between p-6 border-b border-white/5">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-400">
                     <i class="fas fa-clock-rotate-left text-sm"></i>
                 </div>
-                <h2 class="text-lg font-bold font-display text-white">Search History</h2>
+                <h2 id="historyDrawerHeading" class="text-lg font-bold font-display text-white">Search History</h2>
             </div>
-            <button onclick="toggleStats()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition">
+            <button type="button" onclick="toggleStats()" id="closeHistoryBtn" aria-label="Close search history" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
@@ -210,15 +244,15 @@
         </div>
 
         <div class="p-6 border-t border-white/5 bg-slate-950/40">
-            <button onclick="clearHistory()" id="clearHistoryBtn"
-                class="w-full py-3 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white font-bold rounded-2xl transition duration-300 flex items-center justify-center gap-2 border border-red-500/10 hover:border-transparent text-sm">
+            <button type="button" onclick="clearHistory()" id="clearHistoryBtn"
+                class="w-full py-3 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white font-bold rounded-2xl transition duration-300 flex items-center justify-center gap-2 border border-red-500/10 hover:border-transparent text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
                 <i class="fas fa-trash-alt text-xs"></i> Clear Search History
             </button>
         </div>
     </div>
 
     <!-- Drawer Overlay Backing -->
-    <div id="drawerOverlay" onclick="toggleStats()" class="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm hidden"></div>
+    <div id="drawerOverlay" onclick="toggleStats()" class="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm hidden cursor-pointer"></div>
 
     <!-- Main Container -->
     <main class="max-w-6xl mx-auto p-6 md:p-8">
@@ -235,37 +269,36 @@
             <!-- 1. HOMEPAGE / LANDING DESIGN -->
             <div class="py-12 md:py-20 flex flex-col items-center justify-center text-center max-w-3xl mx-auto space-y-8 animate-fade-in">
                 <div class="space-y-4">
-                    <span class="px-3.5 py-1.5 rounded-full text-[10px] font-bold bg-brand-500/15 text-brand-300 border border-brand-500/25 uppercase tracking-widest inline-block">
-                        Cinematic Search Engine
-                    </span>
-                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black font-display tracking-tight leading-tight bg-gradient-to-b from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-black font-display tracking-tight leading-tight text-white">
                         Discover Your Next Cinematic Journey
                     </h1>
-                    <p class="text-slate-400 text-sm sm:text-base md:text-lg max-w-2xl leading-relaxed">
-                        Search, inspect, and explore reviews, top cast members, and technical details for millions of movies and shows.
+                    <p class="text-slate-300 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                        Search, inspect, and explore multi-source reviews, Oscar awards records, and technical specs for millions of movies and shows.
                     </p>
                 </div>
                 
                 <!-- Main Center Search Bar -->
                 <div class="w-full max-w-2xl px-4">
-                    <form action="/search" method="GET" class="relative group" onsubmit="saveSearch('heroSearchInput')">
-                        <input type="text" name="title" id="heroSearchInput" placeholder="Search movies, TV shows, actors..." required
-                            class="w-full py-4.5 pl-14 pr-32 rounded-2xl bg-slate-900/40 border border-white/10 text-white focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 transition duration-300 shadow-xl backdrop-blur-md placeholder-slate-500 text-sm">
-                        <div class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-lg group-focus-within:text-brand-400 transition">
-                            <i class="fas fa-search"></i>
+                    <form action="/search" method="GET" onsubmit="saveSearch('heroSearchInput')">
+                        <div class="flex items-center bg-slate-900/60 border border-white/10 hover:border-white/20 focus-within:border-brand-500/60 focus-within:ring-2 focus-within:ring-brand-500/25 rounded-full transition duration-200 shadow-xl backdrop-blur-md p-1.5 pl-5">
+                            <div class="text-slate-400 text-base shrink-0 group-focus-within:text-brand-400 transition" aria-hidden="true">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <input type="text" name="title" id="heroSearchInput" placeholder="Search movies, TV shows, actors..." required aria-label="Search movies, TV shows, actors"
+                                class="w-full bg-transparent border-none outline-none text-white px-4 placeholder-slate-400 text-sm sm:text-base focus:ring-0">
+                            <button type="submit" id="heroSearchSubmitBtn"
+                                class="px-6 py-3 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white font-bold rounded-full transition shadow-lg shadow-brand-600/20 text-xs uppercase tracking-wider shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950 cursor-pointer">
+                                Search
+                            </button>
                         </div>
-                        <button type="submit" id="heroSearchSubmitBtn"
-                            class="absolute right-2.5 top-1/2 -translate-y-1/2 px-6 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl transition shadow-lg shadow-brand-600/20 text-xs uppercase tracking-wider">
-                            Search
-                        </button>
                     </form>
                     
                     <!-- Popular Suggestion Tags -->
                     <div class="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs">
-                        <span class="text-slate-500 font-semibold uppercase tracking-wider">Try searching:</span>
+                        <span class="text-slate-400 font-medium">Try searching:</span>
                         <% const tags = ['Interstellar', 'The Dark Knight', 'Inception', 'Avatar', 'The Matrix']; %>
                         <% tags.forEach(tag => { %>
-                            <a href="/search?title=<%= encodeURIComponent(tag) %>" class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/5 text-slate-300 hover:bg-brand-500/10 hover:border-brand-500/20 hover:text-white transition duration-200">
+                            <a href="/search?title=<%= encodeURIComponent(tag) %>" class="px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-slate-300 hover:bg-brand-500/15 hover:border-brand-500/30 hover:text-white transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
                                 <%= tag %>
                             </a>
                         <% }) %>
@@ -273,83 +306,135 @@
                 </div>
             </div>
 
-            <!-- Recommended Showcase Section -->
-            <section class="mt-16 animate-slide-up" style="animation-delay: 0.2s;">
+            <!-- Features / Value Pillars Strip -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-8 max-w-4xl mx-auto">
+                <div class="p-5 rounded-2xl glass border border-white/5 flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                        <i class="fas fa-gauge-high text-sm"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white mb-1">Multi-Source Critic Dials</h2>
+                        <p class="text-xs text-slate-400 leading-relaxed">Rotten Tomatoes, IMDb, and Metascore ratings presented side-by-side with visual consensus gauges.</p>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-2xl glass border border-white/5 flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 shrink-0">
+                        <i class="fas fa-trophy text-sm"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white mb-1">Historical Academy Awards</h2>
+                        <p class="text-xs text-slate-400 leading-relaxed">Comprehensive historical Oscar nominations and wins matched against an in-memory index dating back to 1927.</p>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-2xl glass border border-white/5 flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                        <i class="fas fa-clapperboard text-sm"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white mb-1">Production & Cast Intelligence</h2>
+                        <p class="text-xs text-slate-400 leading-relaxed">Verified studio distributors, budgets, box office numbers, and actor filmography profiles.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommended Showcase Section (Shuffled from IMDb Top 100) -->
+            <section class="mt-14 mb-8 animate-slide-up" style="animation-delay: 0.2s;">
                 <div class="flex items-center justify-between mb-8">
-                    <h2 class="text-xl md:text-2xl font-black font-display tracking-tight text-white">Recommended Spotlight</h2>
-                    <div class="h-px flex-1 bg-white/5 mx-6"></div>
-                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Handpicked Favorites</span>
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-black font-display tracking-tight text-white">Recommended Spotlight</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Explore iconic cinematic milestones from the IMDb Top 100</p>
+                    </div>
+                    <div class="h-px flex-1 bg-white/5 mx-6 hidden sm:block"></div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-[11px] text-slate-400 font-semibold tracking-wide hidden sm:inline-block">IMDb Top 100</span>
+                        <button type="button" onclick="shuffleSpotlight()" id="shuffleSpotlightBtn" aria-label="Shuffle recommended movies"
+                            class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-brand-500/20 text-slate-300 hover:text-brand-300 border border-white/10 hover:border-brand-500/30 text-xs font-semibold transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
+                            <i class="fas fa-shuffle text-[10px]" id="shuffleIcon"></i>
+                            <span>Shuffle</span>
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+                <div id="spotlightGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
                     <% 
-                    const suggestions = [ 
-                        {
-                            title: 'Interstellar', 
-                            year: '2014', 
-                            genre: 'Sci-Fi, Adventure',
-                            img: 'https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg'
-                        }, 
-                        {
-                            title: 'The Dark Knight', 
-                            year: '2008', 
-                            genre: 'Action, Crime',
-                            img: 'https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg'
-                        }, 
-                        {
-                            title: 'Inception', 
-                            year: '2010', 
-                            genre: 'Action, Sci-Fi',
-                            img: 'https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg'
-                        }, 
-                        {
-                            title: 'The Matrix', 
-                            year: '1999', 
-                            genre: 'Sci-Fi, Action',
-                            img: 'https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg'
-                        }, 
-                        {
-                            title: 'Avatar', 
-                            year: '2009', 
-                            genre: 'Sci-Fi, Adventure',
-                            img: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Avatar_%282009_film%29_poster.jpg' 
-                        } 
-                    ]; 
+                    const suggestions = (typeof spotlight !== 'undefined' && Array.isArray(spotlight) && spotlight.length > 0)
+                        ? spotlight 
+                        : [ 
+                            {
+                                title: 'The Shawshank Redemption', 
+                                year: '1994', 
+                                genre: 'Drama',
+                                rating: '9.3',
+                                img: 'https://m.media-amazon.com/images/M/MV5BMDAyY2FhYjctNDc5OS00MDNlLThiMGUtY2UxYWVkNGY2ZjljXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg'
+                            }, 
+                            {
+                                title: 'The Godfather', 
+                                year: '1972', 
+                                genre: 'Crime, Drama',
+                                rating: '9.2',
+                                img: 'https://m.media-amazon.com/images/M/MV5BNGEwYjgwOGQtYjg5ZS00Njc1LTk2ZGEtM2QwZWQ2NjdhZTE5XkEyXkFqcGc@._V1_QL75_UY562_CR8,0,380,562_.jpg'
+                            }, 
+                            {
+                                title: 'The Dark Knight', 
+                                year: '2008', 
+                                genre: 'Action, Crime',
+                                rating: '9.0',
+                                img: 'https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg'
+                            }, 
+                            {
+                                title: 'Inception', 
+                                year: '2010', 
+                                genre: 'Action, Sci-Fi',
+                                rating: '8.8',
+                                img: 'https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg'
+                            }, 
+                            {
+                                title: 'Interstellar', 
+                                year: '2014', 
+                                genre: 'Sci-Fi, Adventure',
+                                rating: '8.7',
+                                img: 'https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg' 
+                            } 
+                        ]; 
                     %>
                     <% suggestions.forEach((item, idx) => { %>
-                        <a href="/search?title=<%= encodeURIComponent(item.title) %>" class="group cursor-pointer block relative">
-                            <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/5 group-hover:border-brand-500/30 transition duration-300 shadow-md mb-3 aspect-[2/3]">
-                                <img src="<%= item.img %>" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); logImageError(this.src)" class="h-full w-full object-cover group-hover:scale-105 transition duration-500">
+                        <a href="/search?title=<%= encodeURIComponent(item.title) %>" class="group cursor-pointer block relative rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
+                            <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/10 group-hover:border-brand-500/40 group-hover:shadow-lg group-hover:shadow-brand-500/10 transition duration-300 mb-3 aspect-[2/3]">
+                                <img src="<%= item.img %>" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="h-full w-full object-cover group-hover:scale-105 transition duration-500" alt="<%= item.title %> poster" loading="lazy">
                                 
+                                <!-- Rating Badge overlay -->
+                                <div class="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md border border-white/10 text-[11px] font-bold text-amber-400">
+                                    <i class="fas fa-star text-[10px] text-amber-400"></i>
+                                    <span><%= item.rating %></span>
+                                </div>
+
                                 <!-- Graceful Fallback illustration if image fails -->
                                 <div class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-2xl p-4 text-center">
                                     <div class="w-10 h-10 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400 mb-2">
                                         <i class="fas fa-image text-sm"></i>
                                     </div>
                                     <p class="text-xs font-bold text-slate-300 truncate w-full"><%= item.title %></p>
-                                    <p class="text-[9px] text-slate-500 mt-1">Image Error</p>
+                                    <p class="text-[10px] text-slate-400 mt-1">Image Error</p>
                                 </div>
 
-                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/10 to-transparent opacity-60 group-hover:opacity-85 transition duration-300"></div>
-                                <!-- Play icon overlay on hover -->
-                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
-                                    <span class="w-10 h-10 flex items-center justify-center rounded-full bg-brand-600/90 text-white shadow-xl shadow-brand-600/25 transform scale-75 group-hover:scale-100 transition duration-300">
-                                        <i class="fas fa-play text-xs ml-0.5"></i>
-                                    </span>
-                                </div>
+                                <div class="absolute inset-0 z-10 bg-gradient-to-t from-[#060412] via-[#060412]/20 to-transparent opacity-60 group-hover:opacity-80 transition duration-300" style="transform: translateZ(0);"></div>
                             </div>
-                            <h4 class="font-bold truncate text-slate-200 group-hover:text-brand-400 transition text-sm">
+                            <h3 class="font-bold truncate text-slate-200 group-hover:text-brand-400 transition text-sm">
                                 <%= item.title %>
-                            </h4>
-                            <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
+                            </h3>
+                            <div class="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
                                 <span><%= item.year %></span>
-                                <span>•</span>
-                                <span><%= item.genre %></span>
+                                <span class="text-slate-600">•</span>
+                                <span class="truncate"><%= item.genre %></span>
                             </div>
                         </a>
                     <% }) %>
                 </div>
             </section>
+
+            <script id="imdbTop100Data" type="application/json"><%- JSON.stringify(typeof allTop100 !== 'undefined' ? allTop100 : (typeof spotlight !== 'undefined' ? spotlight : [])) %></script>
         
         <% } else { %>
             <!-- 2. MOVIE DETAILS INTERFACE REDESIGN -->
@@ -358,69 +443,79 @@
                 <!-- Left Column (Poster & Static Meta) -->
                 <div class="lg:col-span-4 flex flex-col gap-6">
                     <div class="relative group rounded-3xl overflow-hidden glass border border-white/10 shadow-2xl transition duration-500 hover:scale-[1.01]">
-                        <img src="<%= movie.Poster %>" onclick="openPosterModal(this.src)" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); logImageError(this.src)" class="w-full object-cover aspect-[2/3] cursor-zoom-in hover:opacity-90 transition duration-300" alt="<%= movie.Title %> Poster">
-                        
-                        <!-- Poster Fallback -->
-                        <div class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-3xl p-6 text-center space-y-3">
-                            <div class="w-16 h-16 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400">
-                                <i class="fas fa-image text-2xl"></i>
+                        <% if (movie.Poster && movie.Poster !== "N/A") { %>
+                            <img src="<%= movie.Poster %>" onclick="openPosterModal(this.src)" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="w-full object-cover aspect-[2/3] cursor-zoom-in hover:opacity-90 transition duration-300" alt="<%= movie.Title %> Poster">
+                            
+                            <!-- Poster Fallback if load fails -->
+                            <div class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-3xl p-6 text-center space-y-3">
+                                <div class="w-16 h-16 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400">
+                                    <i class="fas fa-image text-2xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-base font-bold text-white"><%= movie.Title %></p>
+                                    <p class="text-xs text-slate-400">Poster unavailable</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-base font-bold text-white"><%= movie.Title %></p>
-                                <p class="text-xs text-slate-500">Poster unavailable</p>
+                        <% } else { %>
+                            <div class="w-full aspect-[2/3] flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-3xl p-6 text-center space-y-3">
+                                <div class="w-16 h-16 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400">
+                                    <i class="fas fa-film text-2xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-base font-bold text-white"><%= movie.Title %></p>
+                                    <p class="text-xs text-slate-400">No poster available</p>
+                                </div>
                             </div>
-                        </div>
+                        <% } %>
 
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#060412]/80 via-transparent to-transparent opacity-60"></div>
+                        <div class="absolute inset-0 z-10 bg-gradient-to-t from-[#060412]/80 via-transparent to-transparent opacity-60"></div>
                     </div>
                     
                     <!-- Quick Specs Grid -->
                     <div class="glass p-6 rounded-3xl space-y-4">
-                        <h3 class="text-xs font-bold tracking-wider text-slate-400 uppercase">Quick Specifications</h3>
+                        <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase">Quick Specifications</h3>
                         <div class="grid grid-cols-2 gap-3.5">
                             <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5">
-                                <span class="text-[9px] text-slate-500 block uppercase font-bold">Box Office</span>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Box Office</span>
                                 <span class="text-xs font-bold text-white truncate block"><%= movie.BoxOffice !== "N/A" ? movie.BoxOffice : "N/A" %></span>
                             </div>
                             <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5">
-                                <span class="text-[9px] text-slate-500 block uppercase font-bold">Released</span>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Released</span>
                                 <span class="text-xs font-bold text-white truncate block"><%= movie.Released !== "N/A" ? movie.Released : "N/A" %></span>
                             </div>
                             <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5">
-                                <span class="text-[9px] text-slate-500 block uppercase font-bold">Runtime</span>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Studio</span>
                                 <% 
-                                let formattedRuntime = "N/A";
-                                if (movie.Runtime && movie.Runtime !== "N/A") {
-                                    const rawMinutes = parseInt(movie.Runtime.replace(/\D/g, ''));
-                                    if (!isNaN(rawMinutes)) {
-                                        const hrs = Math.floor(rawMinutes / 60);
-                                        const mins = rawMinutes % 60;
-                                        formattedRuntime = `${hrs > 0 ? hrs + ' hr' + (hrs > 1 ? 's ' : ' ') : ''}${mins > 0 ? mins + ' min' + (mins > 1 ? 's' : '') : ''}`.trim();
-                                    }
+                                let studioName = "N/A";
+                                if (movie.Studio && movie.Studio !== "N/A") {
+                                    studioName = movie.Studio;
+                                } else if (movie.Production && movie.Production !== "N/A") {
+                                    studioName = movie.Production;
                                 }
                                 %>
-                                <span class="text-xs font-bold text-white truncate block"><%= formattedRuntime %></span>
+                                <span class="text-xs font-bold text-white block leading-snug break-words" title="<%= studioName %>"><%= studioName %></span>
                             </div>
                             <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5">
-                                <span class="text-[9px] text-slate-500 block uppercase font-bold">Rated</span>
-                                <span class="text-xs font-bold text-white truncate block"><span class="px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[10px] inline-block font-semibold"><%= movie.Rated !== "N/A" ? movie.Rated : "Not Rated" %></span></span>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Budget</span>
+                                <% 
+                                let budgetVal = "N/A";
+                                if (movie.Budget && movie.Budget !== "N/A") {
+                                    budgetVal = movie.Budget;
+                                }
+                                %>
+                                <span class="text-xs font-bold text-white truncate block"><%= budgetVal %></span>
                             </div>
                         </div>
                         
                         <!-- Primary Action Buttons -->
-                        <div class="space-y-2 pt-2">
-                            <% if (movie.imdbID && movie.imdbID !== "N/A") { %>
+                        <% if (movie.imdbID && movie.imdbID !== "N/A") { %>
+                            <div class="pt-2">
                                 <a href="https://www.imdb.com/title/<%= movie.imdbID %>" target="_blank" id="imdbBtn"
                                     class="w-full flex items-center justify-center gap-2 py-3 bg-accent-imdb hover:bg-[#e2b507] text-black font-black rounded-2xl transition duration-300 group shadow-lg shadow-accent-imdb/10 text-sm">
                                     <i class="fab fa-imdb text-lg"></i> View on IMDb <i class="fas fa-external-link-alt text-[10px] opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition duration-200"></i>
                                 </a>
-                            <% } %>
-                            
-                            <button onclick="toggleRatings()" id="toggleRatingsBtn"
-                                class="w-full py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl border border-white/5 transition duration-300 text-sm flex items-center justify-center gap-2">
-                                <i class="fas fa-star text-xs text-brand-400"></i> <span id="toggleRatingsText">Show Ratings & Reviews</span>
-                            </button>
-                        </div>
+                            </div>
+                        <% } %>
                     </div>
                 </div>
                 
@@ -436,176 +531,286 @@
                                 <%= movie.Title %>
                             </h1>
                             <div class="flex flex-wrap items-center gap-2 text-xs mb-6">
-                                <span class="text-brand-400 font-bold bg-brand-500/15 border border-brand-500/20 px-3 py-1 rounded-full"><%= movie.Year %></span>
-                                <span class="text-slate-600">•</span>
-                                <span class="text-slate-400 font-semibold"><%= movie.Genre %></span>
+                                <span class="text-brand-300 font-bold bg-brand-500/15 border border-brand-500/20 px-3 py-1 rounded-full"><%= movie.Year %></span>
+                                <span class="text-slate-500">•</span>
+                                <span class="text-slate-300 font-semibold"><%= movie.Genre %></span>
+                                <% 
+                                let headerRuntime = "N/A";
+                                if (movie.Runtime && movie.Runtime !== "N/A") {
+                                    const rawMins = parseInt(movie.Runtime.replace(/\D/g, ''));
+                                    if (!isNaN(rawMins)) {
+                                        const h = Math.floor(rawMins / 60);
+                                        const m = rawMins % 60;
+                                        headerRuntime = `${h > 0 ? h + ' hr' + (h > 1 ? 's ' : ' ') : ''}${m > 0 ? m + ' min' + (m > 1 ? 's' : '') : ''}`.trim();
+                                    } else {
+                                        headerRuntime = movie.Runtime;
+                                    }
+                                }
+                                %>
+                                <% if (headerRuntime !== "N/A") { %>
+                                    <span class="text-slate-500">•</span>
+                                    <span class="text-slate-300 font-medium bg-white/5 border border-white/10 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                                        <i class="far fa-clock text-[10px] text-slate-400"></i>
+                                        <%= headerRuntime %>
+                                    </span>
+                                <% } %>
+                                <% if (movie.Rated && movie.Rated !== "N/A") { %>
+                                    <span class="text-slate-500">•</span>
+                                    <span class="px-2.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs font-bold tracking-wide uppercase"><%= movie.Rated %></span>
+                                <% } %>
                             </div>
                         </div>
 
-                        <div class="mt-2 border-l-4 border-brand-500 bg-brand-500/5 px-4 py-3 rounded-r-xl relative">
+                        <div class="mt-2 border border-brand-500/20 bg-brand-500/5 px-5 py-4 rounded-2xl relative max-w-3xl">
                             <i class="fas fa-quote-left absolute -top-2 left-2 text-brand-500/20 text-3xl"></i>
-                            <p class="text-slate-300 text-sm sm:text-base leading-relaxed italic relative z-10 pl-2">
+                            <p class="text-slate-200 text-sm sm:text-base leading-relaxed italic relative z-10 pl-2">
                                 <%= movie.Plot !== "N/A" ? movie.Plot : "No plot description available." %>
                             </p>
                         </div>
                     </div>
 
-                    <!-- Awards Showcase Card -->
-                    <% 
-                    const oscarWins = movie.Oscars ? movie.Oscars.filter(item => item.won) : [];
-                    const oscarNoms = movie.Oscars ? movie.Oscars.filter(item => !item.won) : [];
-                    const hasOscars = oscarWins.length > 0 || oscarNoms.length > 0;
-                    %>
-                    <% if (hasOscars) { %>
-                        <div class="glass p-5 rounded-3xl border border-amber-500/20 flex items-center gap-4 relative overflow-hidden animate-slide-up awards-card-active">
-                            <div class="absolute -right-6 -bottom-6 text-amber-500/5 text-7xl pointer-events-none">
-                                <i class="fas fa-award"></i>
+                    <!-- Ratings & Reviews Dropdown Menu (Replaces Academy Awards Element) -->
+                    <div class="glass rounded-3xl border border-white/10 overflow-hidden animate-slide-up w-full">
+                        <!-- Dropdown Trigger Header -->
+                        <button type="button" onclick="toggleRatings()" id="toggleRatingsBtn" aria-expanded="false" aria-controls="ratingsSection"
+                            class="w-full p-5 flex items-center justify-between text-left hover:bg-white/5 transition duration-300 cursor-pointer group">
+                            <div class="flex items-center gap-3.5">
+                                <div class="w-11 h-11 shrink-0 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/5 group-hover:scale-105 transition duration-200">
+                                    <i class="fas fa-star text-base"></i>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-amber-400/90 block uppercase font-bold tracking-wider mb-0.5">Aggregated Review Metrics</span>
+                                    <h3 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+                                        Ratings & Reviews
+                                    </h3>
+                                </div>
                             </div>
-                            <div class="w-12 h-12 shrink-0 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/5">
-                                <i class="fas fa-trophy text-lg"></i>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-slate-400 font-semibold hidden sm:inline" id="toggleRatingsText">Show Ratings & Reviews</span>
+                                <div class="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 group-hover:text-white transition">
+                                    <i id="toggleRatingsIcon" class="fas fa-chevron-down text-xs transition-transform duration-300"></i>
+                                </div>
                             </div>
-                            <div class="min-w-0 flex-1">
-                                <span class="text-[9px] text-amber-400/80 block uppercase font-bold tracking-widest mb-0.5">Academy Awards (Oscars)</span>
+                        </button>
+
+                        <!-- Dedicated Review Details Dropdown Content (Hidden by default on page load) -->
+                        <div id="ratingsSection" class="hidden p-6 pt-2 space-y-6 border-t border-white/5" style="display: none;">
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="text-xs font-bold tracking-wider text-slate-300 uppercase">Visual Ratings Engine</h4>
+                                    <span class="text-[11px] text-slate-400 font-semibold">Aggregated Scores</span>
+                                </div>
                                 
-                                <% if (oscarWins.length > 0) { %>
-                                    <h4 class="text-sm font-bold text-amber-400">
-                                        Won <%= oscarWins.length %> Oscar<%= oscarWins.length > 1 ? 's' : '' %>
-                                    </h4>
-                                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-                                        <strong class="text-slate-400 font-semibold">Won for:</strong> 
-                                        <%= oscarWins.map(w => w.category).join(', ') %>
-                                    </p>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                                    
+                                    <!-- IMDb Dial -->
+                                    <div class="bg-slate-950/40 p-3.5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                                        <span class="text-[11px] text-slate-400 block uppercase font-bold tracking-wider mb-2">IMDb Rating</span>
+                                        <% 
+                                            let imdbValStr = movie.imdbRating || "N/A";
+                                            let imdbPct = 0;
+                                            if (imdbValStr !== "N/A") {
+                                                imdbPct = Math.round(parseFloat(imdbValStr) * 10);
+                                            }
+                                        %>
+                                        <div class="relative w-14 h-14 flex items-center justify-center">
+                                            <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
+                                                <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                                <path class="text-accent-imdb" stroke-dasharray="<%= imdbPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                            </svg>
+                                            <div class="absolute flex flex-col items-center">
+                                                <span class="text-xs font-black text-white"><%= imdbValStr %></span>
+                                                <span class="text-[10px] text-slate-400 font-semibold">/10</span>
+                                            </div>
+                                        </div>
+                                        <span class="text-[11px] text-slate-400 font-semibold mt-2 truncate max-w-full"><%= movie.imdbVotes !== "N/A" ? movie.imdbVotes : "Ratings" %></span>
+                                    </div>
+
+                                    <!-- Rotten Tomatoes Tomatometer -->
+                                    <div class="bg-slate-950/40 p-3.5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                                        <span class="text-[11px] text-slate-400 block uppercase font-bold tracking-wider mb-2">Tomatometer</span>
+                                        <% 
+                                            let rtVal = "N/A";
+                                            let rtPct = 0;
+                                            if (movie.Ratings && movie.Ratings.length > 0) {
+                                                movie.Ratings.forEach(function(r) { 
+                                                    if (r.Source === "Rotten Tomatoes") {
+                                                        rtVal = r.Value;
+                                                        rtPct = parseInt(r.Value);
+                                                    }
+                                                });
+                                            }
+                                        %>
+                                        <div class="relative w-14 h-14 flex items-center justify-center">
+                                            <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
+                                                <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                                <path class="text-accent-rotten" stroke-dasharray="<%= isNaN(rtPct) ? 0 : rtPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                            </svg>
+                                            <div class="absolute flex flex-col items-center">
+                                                <span class="text-xs font-black text-white"><%= rtVal %></span>
+                                            </div>
+                                        </div>
+                                        <span class="text-[11px] text-slate-400 font-semibold mt-2">Critics Score</span>
+                                    </div>
+
+                                    <!-- TMDB Audience Score -->
+                                    <div class="bg-slate-950/40 p-3.5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                                        <span class="text-[11px] text-slate-400 block uppercase font-bold tracking-wider mb-2">Audience</span>
+                                        <% 
+                                            let tmdbVal = movie.tmdbRating || "N/A";
+                                            let tmdbPct = 0;
+                                            if (tmdbVal !== "N/A") {
+                                                tmdbPct = Math.round(parseFloat(tmdbVal) * 10);
+                                            }
+                                            let tmdbVotes = movie.tmdbVoteCount || "N/A";
+                                        %>
+                                        <div class="relative w-14 h-14 flex items-center justify-center">
+                                            <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
+                                                <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                                <path class="text-brand-500" stroke-dasharray="<%= tmdbPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                            </svg>
+                                            <div class="absolute flex flex-col items-center">
+                                                <span class="text-xs font-black text-white"><%= tmdbVal !== "N/A" ? tmdbPct + "%" : "N/A" %></span>
+                                            </div>
+                                        </div>
+                                        <span class="text-[11px] text-slate-400 font-semibold mt-2 truncate max-w-full"><%= tmdbVotes !== "N/A" ? tmdbVotes + " votes" : "User Rating" %></span>
+                                    </div>
+
+                                    <!-- Metacritic Score -->
+                                    <div class="bg-slate-950/40 p-3.5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                                        <span class="text-[11px] text-slate-400 block uppercase font-bold tracking-wider mb-2">Metacritic</span>
+                                        <% 
+                                            let metaVal = movie.Metascore || "N/A";
+                                            let metaPct = 0;
+                                            if (metaVal !== "N/A") {
+                                                metaPct = parseInt(metaVal);
+                                            }
+                                        %>
+                                        <div class="relative w-14 h-14 flex items-center justify-center">
+                                            <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
+                                                <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                                <path class="text-accent-meta" stroke-dasharray="<%= metaPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                            </svg>
+                                            <div class="absolute flex flex-col items-center">
+                                                <span class="text-xs font-black text-white"><%= metaVal %></span>
+                                                <span class="text-[10px] text-slate-400 font-semibold">/100</span>
+                                            </div>
+                                        </div>
+                                        <span class="text-[11px] text-slate-400 font-semibold mt-2">Metascore</span>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- Critic Review Details Breakdown -->
+                            <div class="pt-2 border-t border-white/5">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Critic Ratings Breakdown</h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <% if (movie.Ratings && movie.Ratings.length > 0) { %>
+                                        <% movie.Ratings.forEach(function(r) { %>
+                                            <div class="bg-slate-950/40 border border-white/5 rounded-2xl p-3.5 flex items-center justify-between hover:bg-slate-900/45 transition">
+                                                <div class="flex items-center gap-2.5 min-w-0">
+                                                    <% if (r.Source === "Internet Movie Database") { %>
+                                                        <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-xl bg-accent-imdb text-black font-extrabold text-[10px]">IMDB</span>
+                                                    <% } else if (r.Source === "Rotten Tomatoes") { %>
+                                                        <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-xl bg-accent-rotten text-white font-extrabold text-[10px]">TOM</span>
+                                                    <% } else if (r.Source === "Metacritic") { %>
+                                                        <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-xl bg-accent-meta text-white font-extrabold text-[10px]">META</span>
+                                                    <% } else { %>
+                                                        <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-xl bg-slate-800 text-white font-bold text-xs"><i class="fas fa-star"></i></span>
+                                                    <% } %>
+                                                    <div class="min-w-0">
+                                                        <h5 class="font-bold text-white text-xs truncate"><%= r.Source %></h5>
+                                                        <p class="text-[11px] text-slate-400 font-medium">Official Rating</p>
+                                                    </div>
+                                                </div>
+                                                <span class="text-sm font-black text-white shrink-0 pl-2"><%= r.Value %></span>
+                                            </div>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <div class="col-span-full py-4 text-center bg-slate-950/20 rounded-2xl border border-white/5">
+                                            <p class="text-slate-400 text-xs">No external critic reviews recorded.</p>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+
+                            <!-- Academy Awards (Oscars) & Honors -->
+                            <% 
+                            const oscarWins = movie.Oscars ? movie.Oscars.filter(item => item.won) : [];
+                            const oscarNoms = movie.Oscars ? movie.Oscars.filter(item => !item.won) : [];
+                            const hasOscars = oscarWins.length > 0 || oscarNoms.length > 0;
+                            %>
+                            <div class="pt-2 border-t border-white/5">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Academy Awards & Recognition</h4>
+                                <% if (hasOscars) { %>
+                                    <div class="bg-slate-950/40 border border-amber-500/20 rounded-2xl p-4.5 flex items-start sm:items-center gap-4 relative overflow-hidden">
+                                        <div class="absolute -right-6 -bottom-6 text-amber-500/5 text-7xl pointer-events-none">
+                                            <i class="fas fa-award"></i>
+                                        </div>
+                                        <div class="w-11 h-11 shrink-0 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/5">
+                                            <i class="fas fa-trophy text-base"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <span class="text-xs text-amber-400/90 block uppercase font-bold tracking-wider mb-0.5">Academy Awards (Oscars)</span>
+                                            
+                                            <% if (oscarWins.length > 0) { %>
+                                                <h5 class="text-sm font-bold text-amber-400">
+                                                    Won <%= oscarWins.length %> Oscar<%= oscarWins.length > 1 ? 's' : '' %>
+                                                </h5>
+                                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                                    <strong class="text-slate-300 font-semibold">Won for:</strong> 
+                                                    <%= oscarWins.map(w => w.category).join(', ') %>
+                                                </p>
+                                            <% } %>
+
+                                            <% if (oscarNoms.length > 0) { %>
+                                                <div class="<%= oscarWins.length > 0 ? 'mt-2.5 pt-2.5 border-t border-white/5' : '' %>">
+                                                    <h5 class="text-sm font-bold text-slate-400">
+                                                        Nominated for <%= oscarNoms.length %> Oscar<%= oscarNoms.length > 1 ? 's' : '' %>
+                                                    </h5>
+                                                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                                        <strong class="text-slate-300 font-semibold">Nominated for:</strong> 
+                                                        <%= oscarNoms.map(n => n.category).join(', ') %>
+                                                    </p>
+                                                </div>
+                                            <% } %>
+
+                                            <% if (movie.Awards && movie.Awards !== "N/A") { %>
+                                                <p class="text-[11px] text-slate-400 mt-2 font-medium">
+                                                    <i class="fas fa-certificate text-amber-400/70 mr-1 text-[10px]"></i>
+                                                    <%= movie.Awards %>
+                                                </p>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                <% } else if (movie.Awards && movie.Awards !== "N/A") { %>
+                                    <div class="bg-slate-950/40 border border-white/5 rounded-2xl p-4 flex items-center gap-3.5">
+                                        <div class="w-10 h-10 shrink-0 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
+                                            <i class="fas fa-award text-base"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <span class="text-xs text-slate-400 block uppercase font-bold tracking-wider mb-0.5">Industry Honors</span>
+                                            <p class="text-xs text-slate-300 font-medium"><%= movie.Awards %></p>
+                                        </div>
+                                    </div>
+                                <% } else { %>
+                                    <div class="py-4 text-center bg-slate-950/20 rounded-2xl border border-white/5">
+                                        <p class="text-slate-400 text-xs">No Academy Awards or nominations on record for this title.</p>
+                                    </div>
                                 <% } %>
-
-                                <% if (oscarNoms.length > 0) { %>
-                                    <div class="<%= oscarWins.length > 0 ? 'mt-2.5 pt-2.5 border-t border-white/5' : '' %>">
-                                        <h4 class="text-sm font-bold text-slate-400">
-                                            Nominated for <%= oscarNoms.length %> Oscar<%= oscarNoms.length > 1 ? 's' : '' %>
-                                        </h4>
-                                        <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-                                            <strong class="text-slate-400 font-semibold">Nominated for:</strong> 
-                                            <%= oscarNoms.map(n => n.category).join(', ') %>
-                                        </p>
-                                    </div>
-                                <% } %>
                             </div>
-                        </div>
-                    <% } %>
-
-                    <!-- Visual Scores Section (Radial Dials) -->
-                    <div id="ratingsSection" class="hidden glass p-6 rounded-3xl animate-fade-in">
-                        <h3 class="text-xs font-bold tracking-wider text-slate-400 uppercase mb-5">Visual Ratings Engine</h3>
-                        
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            
-                            <!-- IMDb Dial -->
-                            <div class="bg-slate-950/40 p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
-                                <span class="text-[9px] text-slate-500 block uppercase font-bold mb-3">IMDb Rating</span>
-                                <% 
-                                    let imdbValStr = movie.imdbRating || "N/A";
-                                    let imdbPct = 0;
-                                    if (imdbValStr !== "N/A") {
-                                        imdbPct = Math.round(parseFloat(imdbValStr) * 10);
-                                    }
-                                %>
-                                <div class="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center">
-                                    <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
-                                        <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                        <path class="text-accent-imdb" stroke-dasharray="<%= imdbPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                    </svg>
-                                    <div class="absolute flex flex-col items-center">
-                                        <span class="text-sm sm:text-base font-black text-white"><%= imdbValStr %></span>
-                                        <span class="text-[8px] text-slate-500 font-bold">/10</span>
-                                    </div>
-                                </div>
-                                <span class="text-[10px] text-slate-400 font-bold mt-3.5"><%= movie.imdbVotes !== "N/A" ? movie.imdbVotes : "Ratings" %></span>
-                            </div>
-
-                            <!-- Rotten Tomatoes Tomatometer -->
-                            <div class="bg-slate-950/40 p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
-                                <span class="text-[9px] text-slate-500 block uppercase font-bold mb-3">Tomatometer</span>
-                                <% 
-                                    let rtVal = "N/A";
-                                    let rtPct = 0;
-                                    movie.Ratings.forEach(function(r) { 
-                                        if (r.Source === "Rotten Tomatoes") {
-                                            rtVal = r.Value;
-                                            rtPct = parseInt(r.Value);
-                                        }
-                                    });
-                                %>
-                                <div class="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center">
-                                    <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
-                                        <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                        <path class="text-accent-rotten" stroke-dasharray="<%= isNaN(rtPct) ? 0 : rtPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                    </svg>
-                                    <div class="absolute flex flex-col items-center">
-                                        <span class="text-sm sm:text-base font-black text-white"><%= rtVal %></span>
-                                    </div>
-                                </div>
-                                <span class="text-[10px] text-slate-400 font-bold mt-3.5">Critics Score</span>
-                            </div>
-
-                            <!-- TMDB User/Audience Score -->
-                            <div class="bg-slate-950/40 p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
-                                <span class="text-[9px] text-slate-500 block uppercase font-bold mb-3">Audience Score</span>
-                                <% 
-                                    let tmdbVal = movie.tmdbRating || "N/A";
-                                    let tmdbPct = 0;
-                                    if (tmdbVal !== "N/A") {
-                                        tmdbPct = Math.round(parseFloat(tmdbVal) * 10);
-                                    }
-                                    let tmdbVotes = movie.tmdbVoteCount || "N/A";
-                                %>
-                                <div class="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center">
-                                    <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
-                                        <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                        <path class="text-brand-500" stroke-dasharray="<%= tmdbPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                    </svg>
-                                    <div class="absolute flex flex-col items-center">
-                                        <span class="text-sm sm:text-base font-black text-white"><%= tmdbVal !== "N/A" ? tmdbPct + "%" : "N/A" %></span>
-                                    </div>
-                                </div>
-                                <span class="text-[10px] text-slate-400 font-bold mt-3.5"><%= tmdbVotes !== "N/A" ? tmdbVotes + " votes" : "User Rating" %></span>
-                            </div>
-
-                            <!-- Metacritic Score -->
-                            <div class="bg-slate-950/40 p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
-                                <span class="text-[9px] text-slate-500 block uppercase font-bold mb-3">Metacritic</span>
-                                <% 
-                                    let metaVal = movie.Metascore || "N/A";
-                                    let metaPct = 0;
-                                    if (metaVal !== "N/A") {
-                                        metaPct = parseInt(metaVal);
-                                    }
-                                %>
-                                <div class="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center">
-                                    <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
-                                        <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                        <path class="text-accent-meta" stroke-dasharray="<%= metaPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                    </svg>
-                                    <div class="absolute flex flex-col items-center">
-                                        <span class="text-sm sm:text-base font-black text-white"><%= metaVal %></span>
-                                        <span class="text-[8px] text-slate-500 font-bold">/100</span>
-                                    </div>
-                                </div>
-                                <span class="text-[10px] text-slate-400 font-bold mt-3.5">Metascore</span>
-                            </div>
-
                         </div>
                     </div>
 
                     <!-- Custom Dashboard Tab Controls -->
                     <div class="glass rounded-3xl overflow-hidden flex flex-col flex-1">
                         <!-- Navigation Headers -->
-                        <div class="flex border-b border-white/5 bg-slate-900/30 p-2 gap-1 overflow-x-auto no-scrollbar">
-                            <button onclick="switchTab('castTab')" id="btn-castTab" class="tab-btn flex-1 py-3 px-4 text-xs font-bold rounded-2xl transition duration-300 text-white bg-brand-500/10 border border-brand-500/20 whitespace-nowrap">
+                        <div role="tablist" aria-label="Movie Details Tabs" class="flex border-b border-white/5 bg-slate-900/30 p-2 gap-1 overflow-x-auto no-scrollbar">
+                            <button type="button" onclick="switchTab('castTab')" id="btn-castTab" role="tab" aria-selected="true" aria-controls="castTab" class="tab-btn flex-1 py-3 px-4 text-xs font-bold rounded-2xl transition duration-300 text-white bg-brand-500/10 border border-brand-500/20 whitespace-nowrap cursor-pointer">
                                 <i class="fas fa-users mr-1.5"></i> Cast & Crew
                             </button>
-                            <button onclick="switchTab('reviewsTab')" id="btn-reviewsTab" class="tab-btn flex-1 py-3 px-4 text-xs font-semibold rounded-2xl transition duration-300 text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap">
-                                <i class="fas fa-star mr-1.5"></i> Review Details
-                            </button>
-                            <button onclick="switchTab('metaTab')" id="btn-metaTab" class="tab-btn flex-1 py-3 px-4 text-xs font-semibold rounded-2xl transition duration-300 text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap">
+                            <button type="button" onclick="switchTab('metaTab')" id="btn-metaTab" role="tab" aria-selected="false" aria-controls="metaTab" class="tab-btn flex-1 py-3 px-4 text-xs font-semibold rounded-2xl transition duration-300 text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap cursor-pointer">
                                 <i class="fas fa-info-circle mr-1.5"></i> Specifications
                             </button>
                         </div>
@@ -614,16 +819,16 @@
                         <div class="p-6 md:p-8 flex-1">
                             
                             <!-- Panel 1: Cast & Crew -->
-                            <div id="castTab" class="tab-content block space-y-6">
+                            <div id="castTab" role="tabpanel" aria-labelledby="btn-castTab" tabindex="0" class="tab-content block space-y-6">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div class="bg-slate-950/30 border border-white/5 rounded-2xl p-4.5">
-                                        <h4 class="text-[9px] uppercase tracking-widest text-slate-500 font-bold mb-1">Director</h4>
+                                        <h4 class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Director</h4>
                                         <p class="text-base font-bold text-white">
                                             <%= movie.Director !== "N/A" ? movie.Director : "Unknown" %>
                                         </p>
                                     </div>
                                     <div class="bg-slate-950/30 border border-white/5 rounded-2xl p-4.5">
-                                        <h4 class="text-[9px] uppercase tracking-widest text-slate-500 font-bold mb-1">Writer</h4>
+                                        <h4 class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Writer</h4>
                                         <p class="text-base font-bold text-white truncate" title="<%= movie.Writer %>">
                                             <%= movie.Writer !== "N/A" ? movie.Writer : "Unknown" %>
                                         </p>
@@ -631,7 +836,7 @@
                                 </div>
                                 
                                 <div>
-                                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Top Cast Details</h4>
+                                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-4">Top Cast Details</h4>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                         <% if (movie.DetailedCast && movie.DetailedCast.length > 0) { 
                                             movie.DetailedCast.forEach(actor => { 
@@ -639,7 +844,7 @@
                                             <div class="bg-slate-950/20 rounded-2xl border border-white/5 p-3 flex items-center gap-3.5 hover:bg-slate-900/40 hover:border-white/10 transition duration-300 group">
                                                 <% if (actor.profile_path) { %>
                                                     <div class="w-12 h-12 shrink-0 rounded-full overflow-hidden bg-slate-800 border-2 border-white/5 group-hover:border-brand-500/50 transition duration-300">
-                                                        <img src="https://image.tmdb.org/t/p/w185<%= actor.profile_path %>" alt="<%= actor.name %>" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); logImageError(this.src)" class="w-full h-full object-cover">
+                                                        <img src="https://image.tmdb.org/t/p/w185<%= actor.profile_path %>" alt="<%= actor.name %>" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="w-full h-full object-cover">
                                                         <div class="hidden w-full h-full bg-brand-500/10 flex items-center justify-center text-brand-300 font-bold text-sm">
                                                             <%= actor.name.split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase() %>
                                                         </div>
@@ -651,7 +856,7 @@
                                                 <% } %>
                                                 <div class="min-w-0 flex-1">
                                                     <h5 class="font-bold text-white truncate group-hover:text-brand-400 transition text-sm"><%= actor.name %></h5>
-                                                    <p class="text-xs text-slate-500 truncate mt-0.5"><%= actor.character %></p>
+                                                    <p class="text-xs text-slate-400 truncate mt-0.5"><%= actor.character %></p>
                                                 </div>
                                             </div>
                                         <% }); } else { 
@@ -665,67 +870,40 @@
                                                     </div>
                                                     <div class="min-w-0 flex-1">
                                                         <h5 class="font-bold text-white truncate group-hover:text-brand-400 transition text-sm"><%= actor %></h5>
-                                                        <p class="text-xs text-slate-500 truncate mt-0.5">Actor</p>
+                                                        <p class="text-xs text-slate-400 truncate mt-0.5">Actor</p>
                                                     </div>
                                                 </div>
                                         <% }); } else { %>
-                                            <p class="text-slate-500 col-span-full text-center py-6 text-xs">No cast information available.</p>
+                                            <p class="text-slate-400 col-span-full text-center py-6 text-xs">No cast information available.</p>
                                         <% } } %>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Panel 2: Review List -->
-                            <div id="reviewsTab" class="tab-content hidden space-y-4">
-                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Critic Ratings Scores</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <% movie.Ratings.forEach(function(r) { %>
-                                        <div class="bg-slate-950/30 border border-white/5 rounded-2xl p-5 flex items-center justify-between hover:bg-slate-900/45 transition">
-                                            <div class="flex items-center gap-3">
-                                                <% if (r.Source === "Internet Movie Database") { %>
-                                                    <span class="flex items-center justify-center w-9 h-9 rounded-xl bg-accent-imdb text-black font-extrabold text-[10px]">IMDB</span>
-                                                <% } else if (r.Source === "Rotten Tomatoes") { %>
-                                                    <span class="flex items-center justify-center w-9 h-9 rounded-xl bg-accent-rotten text-white font-extrabold text-[10px]">TOM</span>
-                                                <% } else if (r.Source === "Metacritic") { %>
-                                                    <span class="flex items-center justify-center w-9 h-9 rounded-xl bg-accent-meta text-white font-extrabold text-[10px]">META</span>
-                                                <% } else { %>
-                                                    <span class="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-800 text-white font-bold text-xs"><i class="fas fa-star"></i></span>
-                                                <% } %>
-                                                <div>
-                                                    <h5 class="font-bold text-white text-sm"><%= r.Source %></h5>
-                                                    <p class="text-[10px] text-slate-500">Official Rating</p>
-                                                </div>
-                                            </div>
-                                            <span class="text-lg font-black text-white"><%= r.Value %></span>
-                                        </div>
-                                    <% }); %>
-                                </div>
-                            </div>
-
                             <!-- Panel 3: Technical Spec Details -->
-                            <div id="metaTab" class="tab-content hidden space-y-4">
-                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Specifications & Metadata</h4>
+                            <div id="metaTab" role="tabpanel" aria-labelledby="btn-metaTab" tabindex="0" class="tab-content hidden space-y-4">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-4">Specifications & Metadata</h4>
                                 <div class="bg-slate-950/20 border border-white/5 rounded-2xl overflow-hidden">
                                     <table class="w-full text-xs text-left">
                                         <tbody>
                                             <tr class="border-b border-white/5">
-                                                <th class="px-5 py-3.5 text-slate-400 font-semibold bg-slate-950/20 w-1/3">Language</th>
+                                                <th class="px-5 py-3.5 text-slate-300 font-semibold bg-slate-950/20 w-1/3">Language</th>
                                                 <td class="px-5 py-3.5 text-white font-semibold"><%= movie.Language !== "N/A" ? movie.Language : "N/A" %></td>
                                             </tr>
                                             <tr class="border-b border-white/5">
-                                                <th class="px-5 py-3.5 text-slate-400 font-semibold bg-slate-950/20">Country</th>
+                                                <th class="px-5 py-3.5 text-slate-300 font-semibold bg-slate-950/20">Country</th>
                                                 <td class="px-5 py-3.5 text-white font-semibold"><%= movie.Country !== "N/A" ? movie.Country : "N/A" %></td>
                                             </tr>
                                             <tr class="border-b border-white/5">
-                                                <th class="px-5 py-3.5 text-slate-400 font-semibold bg-slate-950/20">Awards</th>
+                                                <th class="px-5 py-3.5 text-slate-300 font-semibold bg-slate-950/20">Awards</th>
                                                 <td class="px-5 py-3.5 text-white font-semibold leading-relaxed"><%= movie.Awards !== "N/A" ? movie.Awards : "None" %></td>
                                             </tr>
                                             <tr class="border-b border-white/5">
-                                                <th class="px-5 py-3.5 text-slate-400 font-semibold bg-slate-950/20">Production</th>
+                                                <th class="px-5 py-3.5 text-slate-300 font-semibold bg-slate-950/20">Production</th>
                                                 <td class="px-5 py-3.5 text-white font-semibold"><%= movie.Production !== "N/A" ? movie.Production : "N/A" %></td>
                                             </tr>
                                             <tr>
-                                                <th class="px-5 py-3.5 text-slate-400 font-semibold bg-slate-950/20">Release Type</th>
+                                                <th class="px-5 py-3.5 text-slate-300 font-semibold bg-slate-950/20">Release Type</th>
                                                 <td class="px-5 py-3.5 text-white font-semibold capitalize"><%= movie.Type !== "N/A" ? movie.Type : "N/A" %></td>
                                             </tr>
                                         </tbody>
@@ -741,13 +919,13 @@
     </main>
 
     <!-- Footer -->
-    <footer class="mt-20 border-t border-white/5 bg-[#060412]/60 py-8 px-6 text-center text-xs text-slate-500">
+    <footer class="mt-20 border-t border-white/5 bg-[#060412]/60 py-8 px-6 text-center text-xs text-slate-400">
         <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p>© 2026 FilmFinder. All rights reserved. Cinematic metadata aggregated from OMDB and TMDB APIs.</p>
+            <p>© 2026 CineScope. All rights reserved. Cinematic metadata aggregated from OMDB and TMDB APIs.</p>
             <div class="flex gap-4">
-                <a href="/" class="hover:text-brand-400 transition">Home</a>
+                <a href="/" class="hover:text-brand-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">Home</a>
                 <span class="text-slate-800">|</span>
-                <button onclick="toggleStats()" class="hover:text-brand-400 transition">View Search Logs</button>
+                <button type="button" onclick="toggleStats()" id="footerLogsBtn" class="hover:text-brand-400 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">Search History</button>
             </div>
         </div>
     </footer>
@@ -755,56 +933,105 @@
     <!-- Client-Side Logic Scripts -->
     <script>
         /* 1. Navbar Search Expandable Action */
+        let lastSearchToggle = 0;
         function toggleSearch() {
+            const now = Date.now();
+            if (now - lastSearchToggle < 150) return;
+            lastSearchToggle = now;
+
             const container = document.getElementById('searchContainer');
             const input = document.getElementById('searchInput');
+            const form = document.getElementById('navSearchForm') || (input ? input.closest('form') : null);
+            if (!container || !input) return;
             
             if (container.classList.contains('search-active')) {
-                if (input.value.trim() !== "") {
+                const val = input.value.trim();
+                if (val !== "") {
                     saveSearch('searchInput');
-                    input.closest('form').submit();
+                    if (form) form.submit();
                 } else {
                     container.classList.remove('search-active');
+                    input.blur();
                 }
             } else {
                 container.classList.add('search-active');
-                input.focus();
+                setTimeout(() => {
+                    input.focus();
+                }, 50);
+            }
+        }
+        window.toggleSearch = toggleSearch;
+
+        /* 2. Local Storage and Search Log Manager (Safe & Fault-Tolerant) */
+        function getSearchHistory() {
+            try {
+                const raw = localStorage.getItem('searchHistory');
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed.filter(item => typeof item === 'string' && item.trim()) : [];
+            } catch (err) {
+                console.warn('Unable to access searchHistory from localStorage:', err);
+                return [];
             }
         }
 
-        /* 2. Local Storage and Search Log Manager */
-        function saveSearch(inputId) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-            const title = input.value.trim();
-            if (!title) return;
-            
-            let history = JSON.parse(localStorage.getItem('searchHistory') || "[]");
-            
-            /* Add to start, filtering out previous instances of same search term */
-            history = history.filter(item => item.toLowerCase() !== title.toLowerCase());
-            history.unshift(title);
-            if (history.length > 10) history.pop(); /* Keep 10 most recent */
-            localStorage.setItem('searchHistory', JSON.stringify(history));
+        function setSearchHistory(history) {
+            try {
+                localStorage.setItem('searchHistory', JSON.stringify(history));
+            } catch (err) {
+                console.warn('Unable to write searchHistory to localStorage:', err);
+            }
         }
 
+        function saveSearch(inputId) {
+            try {
+                const input = document.getElementById(inputId);
+                if (!input) return;
+                const title = input.value.trim();
+                if (!title) return;
+                
+                let history = getSearchHistory();
+                history = history.filter(item => item.toLowerCase() !== title.toLowerCase());
+                history.unshift(title);
+                if (history.length > 10) history = history.slice(0, 10);
+                setSearchHistory(history);
+            } catch (err) {
+                console.warn('saveSearch encountered an error:', err);
+            }
+        }
+        window.saveSearch = saveSearch;
+
+        let lastStatsToggle = 0;
         function toggleStats() {
+            const now = Date.now();
+            if (now - lastStatsToggle < 150) return;
+            lastStatsToggle = now;
+
             const drawer = document.getElementById('statsDrawer');
             const overlay = document.getElementById('drawerOverlay');
+            const btn = document.getElementById('statsDrawerBtn');
+            if (!drawer || !overlay) return;
             
-            const isOpen = !drawer.classList.contains('translate-x-full');
+            const isClosed = drawer.classList.contains('translate-x-full') || drawer.style.transform === 'translateX(100%)';
             
-            if (isOpen) {
-                drawer.classList.add('translate-x-full');
-                overlay.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
-            } else {
-                drawer.classList.remove('translate-x-full');
-                overlay.classList.remove('hidden');
-                document.body.classList.add('overflow-hidden');
+            if (isClosed) {
                 renderHistory();
+                drawer.classList.remove('translate-x-full');
+                drawer.style.transform = 'translateX(0)';
+                overlay.classList.remove('hidden');
+                overlay.style.display = 'block';
+                document.body.classList.add('overflow-hidden');
+                if (btn) btn.setAttribute('aria-expanded', 'true');
+            } else {
+                drawer.classList.add('translate-x-full');
+                drawer.style.transform = 'translateX(100%)';
+                overlay.classList.add('hidden');
+                overlay.style.display = 'none';
+                document.body.classList.remove('overflow-hidden');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
             }
         }
+        window.toggleStats = toggleStats;
 
         function escapeHTML(str) {
             if (!str) return '';
@@ -821,17 +1048,18 @@
 
         function renderHistory() {
             const list = document.getElementById('historyList');
-            const history = JSON.parse(localStorage.getItem('searchHistory') || "[]");
+            if (!list) return;
+            const history = getSearchHistory();
 
             if (history.length === 0) {
                 list.innerHTML = `
                     <div class="flex flex-col items-center justify-center text-center py-12 space-y-3">
-                        <div class="w-12 h-12 rounded-full bg-slate-900/60 border border-white/5 flex items-center justify-center text-slate-500">
+                        <div class="w-12 h-12 rounded-full bg-slate-900/60 border border-white/5 flex items-center justify-center text-slate-400">
                             <i class="fas fa-history text-sm"></i>
                         </div>
                         <div>
-                            <h5 class="text-sm font-bold text-slate-300">No recent searches</h5>
-                            <p class="text-xs text-slate-500">Your query history is empty.</p>
+                            <h3 class="text-sm font-bold text-slate-300">No recent searches</h3>
+                            <p class="text-xs text-slate-400 mt-1">Your query history will appear here after searching.</p>
                         </div>
                     </div>
                 `;
@@ -841,81 +1069,165 @@
             list.innerHTML = history.map(item => `
                 <div class="flex items-center justify-between bg-slate-900/60 border border-white/5 p-3.5 rounded-2xl hover:border-brand-500/20 transition group">
                     <div class="flex items-center gap-3 min-w-0">
-                        <i class="fas fa-search text-xs text-slate-500 group-hover:text-brand-400 transition"></i>
+                        <i class="fas fa-search text-xs text-slate-400 group-hover:text-brand-400 transition" aria-hidden="true"></i>
                         <span class="font-bold text-slate-200 text-sm truncate pr-2">${escapeHTML(item)}</span>
                     </div>
                     <a href="/search?title=${encodeURIComponent(item)}"
-                        class="px-3.5 py-1.5 text-xs bg-brand-500/10 hover:bg-brand-500 text-brand-400 hover:text-white rounded-xl font-bold transition">
-                        Inspect
+                        class="px-3.5 py-1.5 text-xs bg-brand-500/10 hover:bg-brand-500 text-brand-300 hover:text-white rounded-xl font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                        Search
                     </a>
                 </div>
             `).join('');
         }
+        window.renderHistory = renderHistory;
 
         function clearHistory() {
-            localStorage.removeItem('searchHistory');
+            try {
+                localStorage.removeItem('searchHistory');
+            } catch (err) {
+                console.warn('Unable to clear searchHistory from localStorage:', err);
+            }
             renderHistory();
         }
+        window.clearHistory = clearHistory;
+
+        /* 2b. Recommended Spotlight Shuffle (IMDb Top 100) */
+        let lastShuffleTime = 0;
+        function shuffleSpotlight() {
+            const now = Date.now();
+            if (now - lastShuffleTime < 300) return;
+            lastShuffleTime = now;
+
+            const grid = document.getElementById('spotlightGrid');
+            const icon = document.getElementById('shuffleIcon');
+            if (!grid) return;
+
+            let list = [];
+            const dataEl = document.getElementById('imdbTop100Data');
+            if (dataEl) {
+                try {
+                    list = JSON.parse(dataEl.textContent);
+                } catch (e) {}
+            }
+
+            if (!Array.isArray(list) || list.length < 5) return;
+
+            if (icon) {
+                icon.classList.add('transition-transform', 'duration-500', 'rotate-180');
+                setTimeout(() => {
+                    if (icon) icon.classList.remove('rotate-180');
+                }, 500);
+            }
+
+            // Pick 5 random unique movies
+            const copy = [...list];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            const selected = copy.slice(0, 5);
+
+            grid.innerHTML = selected.map(item => `
+                <a href="/search?title=${encodeURIComponent(item.title)}" class="group cursor-pointer block relative rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950 animate-fade-in">
+                    <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/10 group-hover:border-brand-500/40 group-hover:shadow-lg group-hover:shadow-brand-500/10 transition duration-300 mb-3 aspect-[2/3]">
+                        <img src="${escapeHTML(item.img)}" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="h-full w-full object-cover group-hover:scale-105 transition duration-500" alt="${escapeHTML(item.title)} poster" loading="lazy">
+                        
+                        <div class="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md border border-white/10 text-[11px] font-bold text-amber-400">
+                            <i class="fas fa-star text-[10px] text-amber-400"></i>
+                            <span>${escapeHTML(item.rating)}</span>
+                        </div>
+
+                        <div class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-2xl p-4 text-center">
+                            <div class="w-10 h-10 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400 mb-2">
+                                <i class="fas fa-film text-sm"></i>
+                            </div>
+                            <p class="text-xs font-bold text-slate-300 truncate w-full">${escapeHTML(item.title)}</p>
+                            <p class="text-[10px] text-slate-400 mt-1">${escapeHTML(item.year)}</p>
+                        </div>
+
+                        <div class="absolute inset-0 z-10 bg-gradient-to-t from-[#060412] via-[#060412]/20 to-transparent opacity-60 group-hover:opacity-80 transition duration-300" style="transform: translateZ(0);"></div>
+                    </div>
+                    <h3 class="font-bold truncate text-slate-200 group-hover:text-brand-400 transition text-sm">
+                        ${escapeHTML(item.title)}
+                    </h3>
+                    <div class="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
+                        <span>${escapeHTML(item.year)}</span>
+                        <span class="text-slate-600">•</span>
+                        <span class="truncate">${escapeHTML(item.genre)}</span>
+                    </div>
+                </a>
+            `).join('');
+        }
+        window.shuffleSpotlight = shuffleSpotlight;
 
         /* 3. Tab Swapping Control */
+        const TAB_IDS = ['castTab', 'metaTab'];
+
         function switchTab(tabId) {
-            // Un-hide ratings dials if they click reviews tab
-            if (tabId === 'reviewsTab') {
-                const ratingsSec = document.getElementById('ratingsSection');
-                if (ratingsSec && ratingsSec.classList.contains('hidden')) {
-                    ratingsSec.classList.remove('hidden');
-                    const btnText = document.getElementById('toggleRatingsText');
-                    if (btnText) btnText.textContent = "Hide Ratings & Reviews";
+            if (!TAB_IDS.includes(tabId)) return;
+
+            TAB_IDS.forEach(id => {
+                const panel = document.getElementById(id);
+                const btn = document.getElementById('btn-' + id);
+
+                if (panel) {
+                    if (id === tabId) {
+                        panel.classList.remove('hidden');
+                        panel.classList.add('block');
+                        panel.style.display = 'block';
+                    } else {
+                        panel.classList.add('hidden');
+                        panel.classList.remove('block');
+                        panel.style.display = 'none';
+                    }
                 }
-            }
 
-            // Hide all tab components
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-                content.classList.remove('block');
+                if (btn) {
+                    if (id === tabId) {
+                        btn.className = "tab-btn flex-1 py-3 px-4 text-xs font-bold rounded-2xl transition duration-300 text-white bg-brand-500/10 border border-brand-500/20 whitespace-nowrap cursor-pointer";
+                        btn.setAttribute('aria-selected', 'true');
+                    } else {
+                        btn.className = "tab-btn flex-1 py-3 px-4 text-xs font-semibold rounded-2xl transition duration-300 text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap cursor-pointer";
+                        btn.setAttribute('aria-selected', 'false');
+                    }
+                }
             });
-            
-            // Activate selected tab body
-            const target = document.getElementById(tabId);
-            if (target) {
-                target.classList.remove('hidden');
-                target.classList.add('block');
-            }
-            
-            // De-select all tab buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = "tab-btn flex-1 py-3 px-4 text-xs font-semibold rounded-2xl transition duration-300 text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap";
-            });
-            
-            // Apply selection styling to active button
-            const activeBtn = document.getElementById('btn-' + tabId);
-            if (activeBtn) {
-                activeBtn.className = "tab-btn flex-1 py-3 px-4 text-xs font-bold rounded-2xl transition duration-300 text-white bg-brand-500/10 border border-brand-500/20 whitespace-nowrap";
-            }
         }
+        window.switchTab = switchTab;
 
-        /* 4. Toggle Ratings visibility */
+        /* 4. Toggle Ratings & Reviews Dropdown Menu */
+        let lastRatingsToggle = 0;
         function toggleRatings() {
+            const now = Date.now();
+            if (now - lastRatingsToggle < 150) return;
+            lastRatingsToggle = now;
+
             const ratingsSec = document.getElementById('ratingsSection');
             const btnText = document.getElementById('toggleRatingsText');
+            const btn = document.getElementById('toggleRatingsBtn');
+            const icon = document.getElementById('toggleRatingsIcon');
             if (!ratingsSec) return;
             
-            if (ratingsSec.classList.contains('hidden')) {
+            const isHidden = ratingsSec.classList.contains('hidden') || ratingsSec.style.display === 'none';
+            if (isHidden) {
                 ratingsSec.classList.remove('hidden');
+                ratingsSec.style.display = 'block';
                 if (btnText) btnText.textContent = "Hide Ratings & Reviews";
+                if (btn) btn.setAttribute('aria-expanded', 'true');
+                if (icon) icon.classList.add('rotate-180');
             } else {
                 ratingsSec.classList.add('hidden');
+                ratingsSec.style.display = 'none';
                 if (btnText) btnText.textContent = "Show Ratings & Reviews";
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+                if (icon) icon.classList.remove('rotate-180');
             }
         }
+        window.toggleRatings = toggleRatings;
 
-        /* 5. Client-side Log reporting for broken images */
+        /* 5. Client-side Log reporting (disabled to prevent telemetry flooding) */
         function logImageError(src) {
-            fetch('/log', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: `Image failed to load: ${src}` })
-            }).catch(console.error);
+            // No-op to eliminate extraneous network requests
         }
 
         /* 6. Fullscreen Poster Modal Controls */
@@ -952,14 +1264,154 @@
                 modal.classList.add('hidden');
             }, 300);
         }
+
+        /* 7. Keyboard Navigation & Outside-Click Handlers */
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closePosterModal();
+                const drawer = document.getElementById('statsDrawer');
+                if (drawer && (!drawer.classList.contains('translate-x-full') || drawer.style.transform === 'translateX(0px)')) {
+                    toggleStats();
+                }
+                const searchContainer = document.getElementById('searchContainer');
+                if (searchContainer && searchContainer.classList.contains('search-active')) {
+                    searchContainer.classList.remove('search-active');
+                    const input = document.getElementById('searchInput');
+                    if (input) input.blur();
+                }
+            }
+        });
+
+        // Click outside to collapse search bar if empty
+        document.addEventListener('click', (e) => {
+            const searchContainer = document.getElementById('searchContainer');
+            if (searchContainer && searchContainer.classList.contains('search-active')) {
+                if (!searchContainer.contains(e.target)) {
+                    const input = document.getElementById('searchInput');
+                    if (input && input.value.trim() === '') {
+                        searchContainer.classList.remove('search-active');
+                    }
+                }
+            }
+        });
+
+        /* 8. Clean up animations on end and bind robust event listeners */
+        document.addEventListener('DOMContentLoaded', () => {
+            const cleanupAnimation = (e) => {
+                if (e.animationName === 'fadeIn' || e.animationName === 'slideUp') {
+                    e.currentTarget.style.animation = 'none';
+                    e.currentTarget.offsetHeight; // Force reflow
+                }
+            };
+            document.querySelectorAll('.animate-fade-in, .animate-slide-up').forEach(el => {
+                el.addEventListener('animationend', cleanupAnimation);
+            });
+
+            // Bind explicit click listener to Navbar Search button
+            const navSearchBtn = document.getElementById('navSearchBtn');
+            if (navSearchBtn) {
+                navSearchBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    toggleSearch();
+                });
+            }
+
+            // Bind explicit form submit on navSearchForm
+            const navSearchForm = document.getElementById('navSearchForm');
+            if (navSearchForm) {
+                navSearchForm.addEventListener('submit', (e) => {
+                    const input = document.getElementById('searchInput');
+                    if (!input || !input.value.trim()) {
+                        e.preventDefault();
+                        toggleSearch();
+                    } else {
+                        saveSearch('searchInput');
+                    }
+                });
+            }
+
+            // Bind explicit click listener to History Trigger button
+            const statsDrawerBtn = document.getElementById('statsDrawerBtn');
+            if (statsDrawerBtn) {
+                statsDrawerBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    toggleStats();
+                });
+            }
+
+            // Bind explicit click listener to Drawer Close button
+            const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+            if (closeHistoryBtn) {
+                closeHistoryBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    toggleStats();
+                });
+            }
+
+            // Bind explicit click listener to Drawer Overlay
+            const drawerOverlay = document.getElementById('drawerOverlay');
+            if (drawerOverlay) {
+                drawerOverlay.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    toggleStats();
+                });
+            }
+
+            // Bind explicit click listener to Clear History button
+            const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+            if (clearHistoryBtn) {
+                clearHistoryBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    clearHistory();
+                });
+            }
+
+            // Bind explicit click listener to Footer Logs button
+            const footerLogsBtn = document.getElementById('footerLogsBtn');
+            if (footerLogsBtn) {
+                footerLogsBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    toggleStats();
+                });
+            }
+
+            // Bind explicit click event listeners to tabs
+            TAB_IDS.forEach(tabId => {
+                const btn = document.getElementById('btn-' + tabId);
+                if (btn) {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        switchTab(tabId);
+                    });
+                }
+            });
+
+            // Bind explicit click event listener to toggleRatingsBtn
+            const toggleRatingsBtn = document.getElementById('toggleRatingsBtn');
+            if (toggleRatingsBtn) {
+                toggleRatingsBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    toggleRatings();
+                });
+            }
+
+            // Bind explicit click event listener to shuffleSpotlightBtn
+            const shuffleSpotlightBtn = document.getElementById('shuffleSpotlightBtn');
+            if (shuffleSpotlightBtn) {
+                shuffleSpotlightBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    shuffleSpotlight();
+                });
+            }
+        });
     </script>
 
     <!-- Poster Fullscreen Modal Overlay -->
-    <div id="posterModal" onclick="closePosterModal()" class="fixed inset-0 z-[110] bg-black/90 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 items-center justify-center cursor-zoom-out">
-        <button onclick="closePosterModal()" class="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white text-lg transition border border-white/10">
+    <div id="posterModal" onclick="closePosterModal()" role="dialog" aria-modal="true" aria-label="Fullscreen Movie Poster Preview" class="fixed inset-0 z-[110] bg-black/90 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 items-center justify-center cursor-zoom-out">
+        <button onclick="closePosterModal()" aria-label="Close poster preview" class="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white text-lg transition border border-white/10">
             <i class="fas fa-times"></i>
         </button>
-        <img id="modalPosterImg" src="" class="max-h-[85vh] max-w-[90vw] object-contain rounded-2xl shadow-2xl border border-white/15 transform scale-95 transition-transform duration-300">
+        <img id="modalPosterImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="Enlarged Poster Preview" class="max-h-[85vh] max-w-[90vw] object-contain rounded-2xl shadow-2xl border border-white/15 transform scale-95 transition-transform duration-300">
     </div>
 </body>
 
