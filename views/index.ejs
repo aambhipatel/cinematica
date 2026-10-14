@@ -6,15 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="CineScope - Discover cast, crew, ratings, and production metadata of your favorite movies.">
     <title>CineScope | Cinematic Stats & Movie Lookup</title>
-    
+
     <!-- External assets: Fonts, Tailwind CSS, FontAwesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Custom Tailwind Configuration -->
     <script>
         tailwind.config = {
@@ -67,8 +67,16 @@
             }
         }
     </script>
-    
+
     <style>
+        /* Awards share one gold system for Oscars and Primetime Emmys. */
+        .award-card { border: 1px solid var(--award-gold-border); background: var(--award-gold-soft); }
+        .award-text { color: var(--award-gold); }
+        .episode-summary { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .episode-summary.expanded { display: block; }
+        .episode-skeleton { animation: episodePulse 1.4s ease-in-out infinite; }
+        @keyframes episodePulse { 50% { opacity: .4; } }
+        @media (prefers-reduced-motion: reduce) { .episode-skeleton { animation: none; } }
         /* Browser surface styling */
         ::selection {
             background-color: rgba(139, 92, 246, 0.35);
@@ -77,6 +85,9 @@
 
         :root {
             caret-color: #a78bfa;
+            --award-gold: #fbbf24;
+            --award-gold-soft: rgba(251, 191, 36, .1);
+            --award-gold-border: rgba(251, 191, 36, .25);
         }
 
         /* Custom scrollbars */
@@ -183,6 +194,13 @@
     </style>
 </head>
 
+<% const isSeries = movie && movie.Type === 'series';
+   const hasValue = v => v !== undefined && v !== null && v !== '' && v !== 'N/A';
+   const field = (name, legacy, source = 'OMDb') => movie && movie.Metrics && movie.Metrics[name] ? movie.Metrics[name] : { value: hasValue(legacy) ? legacy : null, source };
+   const boxOffice = field('boxOffice', movie && movie.BoxOffice);
+   const budget = field('budget', movie && movie.Budget, 'TMDB');
+   const studio = field('studio', movie && (movie.Studio || movie.Production));
+%>
 <body class="bg-brand-950 text-slate-100 min-h-screen font-sans antialiased overflow-x-hidden">
 
     <!-- Cinematic Ambient Background Glow elements -->
@@ -256,7 +274,7 @@
 
     <!-- Main Container -->
     <main class="max-w-6xl mx-auto p-6 md:p-8">
-        
+
         <!-- Error Banner -->
         <% if (error) { %>
             <div class="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-sm animate-fade-in">
@@ -276,7 +294,7 @@
                         Search, inspect, and explore multi-source reviews, Oscar awards records, and technical specs for millions of movies and shows.
                     </p>
                 </div>
-                
+
                 <!-- Main Center Search Bar -->
                 <div class="w-full max-w-2xl px-4">
                     <form action="/search" method="GET" onsubmit="saveSearch('heroSearchInput')">
@@ -292,7 +310,7 @@
                             </button>
                         </div>
                     </form>
-                    
+
                     <!-- Popular Suggestion Tags -->
                     <div class="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs">
                         <span class="text-slate-400 font-medium">Try searching:</span>
@@ -356,54 +374,54 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <div id="spotlightGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
-                    <% 
+                    <%
                     const suggestions = (typeof spotlight !== 'undefined' && Array.isArray(spotlight) && spotlight.length > 0)
-                        ? spotlight 
-                        : [ 
+                        ? spotlight
+                        : [
                             {
-                                title: 'The Shawshank Redemption', 
-                                year: '1994', 
+                                title: 'The Shawshank Redemption',
+                                year: '1994',
                                 genre: 'Drama',
                                 rating: '9.3',
                                 img: 'https://m.media-amazon.com/images/M/MV5BMDAyY2FhYjctNDc5OS00MDNlLThiMGUtY2UxYWVkNGY2ZjljXkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg'
-                            }, 
+                            },
                             {
-                                title: 'The Godfather', 
-                                year: '1972', 
+                                title: 'The Godfather',
+                                year: '1972',
                                 genre: 'Crime, Drama',
                                 rating: '9.2',
                                 img: 'https://m.media-amazon.com/images/M/MV5BNGEwYjgwOGQtYjg5ZS00Njc1LTk2ZGEtM2QwZWQ2NjdhZTE5XkEyXkFqcGc@._V1_QL75_UY562_CR8,0,380,562_.jpg'
-                            }, 
+                            },
                             {
-                                title: 'The Dark Knight', 
-                                year: '2008', 
+                                title: 'The Dark Knight',
+                                year: '2008',
                                 genre: 'Action, Crime',
                                 rating: '9.0',
                                 img: 'https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg'
-                            }, 
+                            },
                             {
-                                title: 'Inception', 
-                                year: '2010', 
+                                title: 'Inception',
+                                year: '2010',
                                 genre: 'Action, Sci-Fi',
                                 rating: '8.8',
                                 img: 'https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg'
-                            }, 
+                            },
                             {
-                                title: 'Interstellar', 
-                                year: '2014', 
+                                title: 'Interstellar',
+                                year: '2014',
                                 genre: 'Sci-Fi, Adventure',
                                 rating: '8.7',
-                                img: 'https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg' 
-                            } 
-                        ]; 
+                                img: 'https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg'
+                            }
+                        ];
                     %>
                     <% suggestions.forEach((item, idx) => { %>
                         <a href="/search?title=<%= encodeURIComponent(item.title) %>" class="group cursor-pointer block relative rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
                             <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/10 group-hover:border-brand-500/40 group-hover:shadow-lg group-hover:shadow-brand-500/10 transition duration-300 mb-3 aspect-[2/3]">
                                 <img src="<%= item.img %>" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="h-full w-full object-cover group-hover:scale-105 transition duration-500" alt="<%= item.title %> poster" loading="lazy">
-                                
+
                                 <!-- Rating Badge overlay -->
                                 <div class="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md border border-white/10 text-[11px] font-bold text-amber-400">
                                     <i class="fas fa-star text-[10px] text-amber-400"></i>
@@ -435,17 +453,17 @@
             </section>
 
             <script id="imdbTop100Data" type="application/json"><%- JSON.stringify(typeof allTop100 !== 'undefined' ? allTop100 : (typeof spotlight !== 'undefined' ? spotlight : [])) %></script>
-        
+
         <% } else { %>
             <!-- 2. MOVIE DETAILS INTERFACE REDESIGN -->
             <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-8 animate-slide-up">
-                
+
                 <!-- Left Column (Poster & Static Meta) -->
                 <div class="lg:col-span-4 flex flex-col gap-6">
                     <div class="relative group rounded-3xl overflow-hidden glass border border-white/10 shadow-2xl transition duration-500 hover:scale-[1.01]">
                         <% if (movie.Poster && movie.Poster !== "N/A") { %>
-                            <img src="<%= movie.Poster %>" onclick="openPosterModal(this.src)" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="w-full object-cover aspect-[2/3] cursor-zoom-in hover:opacity-90 transition duration-300" alt="<%= movie.Title %> Poster">
-                            
+                            <img src="<%= movie.Poster %>" onclick="openPosterModal(this.src)" onerror="handlePosterError(this)" data-poster-sources="<%= JSON.stringify(movie.PosterSources || []) %>" class="w-full object-cover aspect-[2/3] cursor-zoom-in hover:opacity-90 transition duration-300" alt="<%= movie.Title %> Poster">
+
                             <!-- Poster Fallback if load fails -->
                             <div class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-3xl p-6 text-center space-y-3">
                                 <div class="w-16 h-16 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400">
@@ -468,45 +486,44 @@
                             </div>
                         <% } %>
 
-                        <div class="absolute inset-0 z-10 bg-gradient-to-t from-[#060412]/80 via-transparent to-transparent opacity-60"></div>
+                        <div class="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-[#060412]/80 via-transparent to-transparent opacity-60"></div>
                     </div>
-                    
+
                     <!-- Quick Specs Grid -->
                     <div class="glass p-6 rounded-3xl space-y-4">
                         <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase">Quick Specifications</h3>
                         <div class="grid grid-cols-2 gap-3.5">
-                            <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5">
-                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Box Office</span>
-                                <span class="text-xs font-bold text-white truncate block"><%= movie.BoxOffice !== "N/A" ? movie.BoxOffice : "N/A" %></span>
-                            </div>
-                            <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5">
-                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Released</span>
-                                <span class="text-xs font-bold text-white truncate block"><%= movie.Released !== "N/A" ? movie.Released : "N/A" %></span>
-                            </div>
-                            <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5">
-                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Studio</span>
-                                <% 
-                                let studioName = "N/A";
-                                if (movie.Studio && movie.Studio !== "N/A") {
-                                    studioName = movie.Studio;
-                                } else if (movie.Production && movie.Production !== "N/A") {
-                                    studioName = movie.Production;
-                                }
-                                %>
-                                <span class="text-xs font-bold text-white block leading-snug break-words" title="<%= studioName %>"><%= studioName %></span>
-                            </div>
-                            <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5">
-                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Budget</span>
-                                <% 
-                                let budgetVal = "N/A";
-                                if (movie.Budget && movie.Budget !== "N/A") {
-                                    budgetVal = movie.Budget;
-                                }
-                                %>
-                                <span class="text-xs font-bold text-white truncate block"><%= budgetVal %></span>
-                            </div>
+                            <% if (isSeries && movie.TV && movie.TV.watchTime.value) { %>
+                                <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5" data-metric="watch-time" title="via <%= movie.TV.watchTime.source %>; <%= movie.TV.watchTime.episodes %> aired episodes across <%= movie.TV.watchTime.seasons %> seasons; specials excluded">
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Total watch time</span>
+                                    <span class="text-xs font-bold text-white block"><%= formatWatchTime(movie.TV.watchTime.value, movie.TV.watchTime.approximate) %></span>
+                                </div>
+                            <% } else if (!isSeries && boxOffice.value) { %>
+                                <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5" data-metric="box-office" title="via <%= boxOffice.source %><%= boxOffice.source === 'OMDb' ? '; US box office' : boxOffice.source === 'TMDB' ? '; worldwide revenue' : '; reported box office' %>">
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Box Office</span>
+                                    <span class="text-xs font-bold text-white block"><%= boxOffice.value %></span>
+                                </div>
+                            <% } %>
+                            <% if (hasValue(movie.Released)) { %>
+                                <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5" title="via OMDb">
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Released</span>
+                                    <span class="text-xs font-bold text-white block"><%= movie.Released %></span>
+                                </div>
+                            <% } %>
+                            <% if (studio.value) { %>
+                                <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5" title="via <%= studio.source %>">
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block"><%= isSeries ? 'Network / Studio' : 'Studio' %></span>
+                                    <span class="text-xs font-bold text-white block break-words"><%= studio.value %></span>
+                                </div>
+                            <% } %>
+                            <% if (!isSeries && budget.value) { %>
+                                <div class="bg-slate-950/40 p-3 rounded-2xl border border-white/5" title="via <%= budget.source %>">
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Budget</span>
+                                    <span class="text-xs font-bold text-white block"><%= budget.value %></span>
+                                </div>
+                            <% } %>
                         </div>
-                        
+
                         <!-- Primary Action Buttons -->
                         <% if (movie.imdbID && movie.imdbID !== "N/A") { %>
                             <div class="pt-2">
@@ -518,14 +535,14 @@
                         <% } %>
                     </div>
                 </div>
-                
+
                 <!-- Right Column (Tabbed Dashboard) -->
                 <div class="lg:col-span-8 flex flex-col gap-6">
-                    
+
                     <!-- Title block & plot -->
                     <div class="glass p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[220px]">
                         <div class="absolute -right-16 -top-16 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl"></div>
-                        
+
                         <div>
                             <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight font-display mb-3 text-white leading-tight">
                                 <%= movie.Title %>
@@ -534,9 +551,9 @@
                                 <span class="text-brand-300 font-bold bg-brand-500/15 border border-brand-500/20 px-3 py-1 rounded-full"><%= movie.Year %></span>
                                 <span class="text-slate-500">•</span>
                                 <span class="text-slate-300 font-semibold"><%= movie.Genre %></span>
-                                <% 
+                                <%
                                 let headerRuntime = "N/A";
-                                if (movie.Runtime && movie.Runtime !== "N/A") {
+                                if (!isSeries && movie.Runtime && movie.Runtime !== "N/A") {
                                     const rawMins = parseInt(movie.Runtime.replace(/\D/g, ''));
                                     if (!isNaN(rawMins)) {
                                         const h = Math.floor(rawMins / 60);
@@ -547,7 +564,13 @@
                                     }
                                 }
                                 %>
-                                <% if (headerRuntime !== "N/A") { %>
+                                <% if (isSeries && movie.TV && movie.TV.averageRuntime.value) { %>
+                                    <span class="text-slate-500">•</span>
+                                    <span data-metric="episode-runtime" class="text-slate-300 font-medium bg-white/5 border border-white/10 px-2.5 py-1 rounded-full" title="via <%= movie.TV.averageRuntime.source %>; regular seasons, missing runtimes excluded">
+                                        Avg. episode runtime: ~<%= movie.TV.averageRuntime.value %> min / episode
+                                    </span>
+                                <% } %>
+                                <% if (!isSeries && headerRuntime !== "N/A") { %>
                                     <span class="text-slate-500">•</span>
                                     <span class="text-slate-300 font-medium bg-white/5 border border-white/10 px-2.5 py-1 rounded-full flex items-center gap-1.5">
                                         <i class="far fa-clock text-[10px] text-slate-400"></i>
@@ -600,206 +623,63 @@
                                     <h4 class="text-xs font-bold tracking-wider text-slate-300 uppercase">Visual Ratings Engine</h4>
                                     <span class="text-[11px] text-slate-400 font-semibold">Aggregated Scores</span>
                                 </div>
-                                
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                                    
-                                    <!-- IMDb Dial -->
-                                    <div class="bg-slate-950/40 p-3.5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
-                                        <span class="text-[11px] text-slate-400 block uppercase font-bold tracking-wider mb-2">IMDb Rating</span>
-                                        <% 
-                                            let imdbValStr = movie.imdbRating || "N/A";
-                                            let imdbPct = 0;
-                                            if (imdbValStr !== "N/A") {
-                                                imdbPct = Math.round(parseFloat(imdbValStr) * 10);
-                                            }
-                                        %>
-                                        <div class="relative w-14 h-14 flex items-center justify-center">
-                                            <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
-                                                <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                                <path class="text-accent-imdb" stroke-dasharray="<%= imdbPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                            </svg>
-                                            <div class="absolute flex flex-col items-center">
-                                                <span class="text-xs font-black text-white"><%= imdbValStr %></span>
-                                                <span class="text-[10px] text-slate-400 font-semibold">/10</span>
-                                            </div>
-                                        </div>
-                                        <span class="text-[11px] text-slate-400 font-semibold mt-2 truncate max-w-full"><%= movie.imdbVotes !== "N/A" ? movie.imdbVotes : "Ratings" %></span>
-                                    </div>
 
-                                    <!-- Rotten Tomatoes Tomatometer -->
-                                    <div class="bg-slate-950/40 p-3.5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
-                                        <span class="text-[11px] text-slate-400 block uppercase font-bold tracking-wider mb-2">Tomatometer</span>
-                                        <% 
-                                            let rtVal = "N/A";
-                                            let rtPct = 0;
-                                            if (movie.Ratings && movie.Ratings.length > 0) {
-                                                movie.Ratings.forEach(function(r) { 
-                                                    if (r.Source === "Rotten Tomatoes") {
-                                                        rtVal = r.Value;
-                                                        rtPct = parseInt(r.Value);
-                                                    }
-                                                });
-                                            }
-                                        %>
-                                        <div class="relative w-14 h-14 flex items-center justify-center">
-                                            <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
-                                                <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                                <path class="text-accent-rotten" stroke-dasharray="<%= isNaN(rtPct) ? 0 : rtPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                            </svg>
-                                            <div class="absolute flex flex-col items-center">
-                                                <span class="text-xs font-black text-white"><%= rtVal %></span>
+                                <% const scores = movie.Scores || [
+                                    { label: 'IMDb', value: parseFloat(movie.imdbRating), max: 10, source: 'OMDb' },
+                                    ...(movie.Ratings || []).filter(r => r.Source !== 'Internet Movie Database').map(r => ({ label: r.Source === 'Rotten Tomatoes' ? 'Tomatometer' : r.Source, value: parseFloat(r.Value), max: 100, source: 'OMDb' })),
+                                    { label: 'TMDB', value: movie.tmdbRating, max: 10, source: 'TMDB' }
+                                ].filter(r => Number.isFinite(Number(r.value)) && Number(r.value) > 0); %>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                                    <% scores.forEach(score => { const percent = Math.min(100, Math.round(score.value / score.max * 100)); %>
+                                        <div class="bg-slate-950/40 p-3.5 rounded-2xl border border-white/5 flex flex-col items-center text-center" title="via <%= score.source %>">
+                                            <span class="text-[11px] text-slate-300 uppercase font-bold mb-2"><%= score.label %></span>
+                                            <div class="relative w-14 h-14 flex items-center justify-center">
+                                                <svg class="w-full h-full circle-progress" viewBox="0 0 36 36" aria-hidden="true">
+                                                    <circle cx="18" cy="18" r="15.9155" stroke-width="3" stroke="#1e293b" fill="none"/>
+                                                    <circle cx="18" cy="18" r="15.9155" pathLength="100" stroke-dasharray="<%= percent %> 100" stroke-width="3" stroke-linecap="round" stroke="<%= score.label === 'IMDb' ? '#f5c518' : score.label === 'Tomatometer' ? '#f84a25' : score.label === 'Metacritic' ? '#66cc33' : '#a78bfa' %>" fill="none"/>
+                                                </svg>
+                                                <span class="absolute text-xs font-black text-white"><%= score.value %><span class="block text-[11px] text-slate-300">/<%= score.max %></span></span>
                                             </div>
+                                            <% if (score.votes) { %><span class="text-[11px] text-slate-400 mt-2"><%= score.votes %> votes</span><% } %>
+                                            <span class="text-[11px] text-slate-400 mt-1">via <%= score.source %></span>
                                         </div>
-                                        <span class="text-[11px] text-slate-400 font-semibold mt-2">Critics Score</span>
-                                    </div>
-
-                                    <!-- TMDB Audience Score -->
-                                    <div class="bg-slate-950/40 p-3.5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
-                                        <span class="text-[11px] text-slate-400 block uppercase font-bold tracking-wider mb-2">Audience</span>
-                                        <% 
-                                            let tmdbVal = movie.tmdbRating || "N/A";
-                                            let tmdbPct = 0;
-                                            if (tmdbVal !== "N/A") {
-                                                tmdbPct = Math.round(parseFloat(tmdbVal) * 10);
-                                            }
-                                            let tmdbVotes = movie.tmdbVoteCount || "N/A";
-                                        %>
-                                        <div class="relative w-14 h-14 flex items-center justify-center">
-                                            <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
-                                                <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                                <path class="text-brand-500" stroke-dasharray="<%= tmdbPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                            </svg>
-                                            <div class="absolute flex flex-col items-center">
-                                                <span class="text-xs font-black text-white"><%= tmdbVal !== "N/A" ? tmdbPct + "%" : "N/A" %></span>
-                                            </div>
-                                        </div>
-                                        <span class="text-[11px] text-slate-400 font-semibold mt-2 truncate max-w-full"><%= tmdbVotes !== "N/A" ? tmdbVotes + " votes" : "User Rating" %></span>
-                                    </div>
-
-                                    <!-- Metacritic Score -->
-                                    <div class="bg-slate-950/40 p-3.5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
-                                        <span class="text-[11px] text-slate-400 block uppercase font-bold tracking-wider mb-2">Metacritic</span>
-                                        <% 
-                                            let metaVal = movie.Metascore || "N/A";
-                                            let metaPct = 0;
-                                            if (metaVal !== "N/A") {
-                                                metaPct = parseInt(metaVal);
-                                            }
-                                        %>
-                                        <div class="relative w-14 h-14 flex items-center justify-center">
-                                            <svg class="w-full h-full circle-progress" viewBox="0 0 36 36">
-                                                <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                                <path class="text-accent-meta" stroke-dasharray="<%= metaPct %>, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                            </svg>
-                                            <div class="absolute flex flex-col items-center">
-                                                <span class="text-xs font-black text-white"><%= metaVal %></span>
-                                                <span class="text-[10px] text-slate-400 font-semibold">/100</span>
-                                            </div>
-                                        </div>
-                                        <span class="text-[11px] text-slate-400 font-semibold mt-2">Metascore</span>
-                                    </div>
-
+                                    <% }) %>
                                 </div>
                             </div>
 
-                            <!-- Critic Review Details Breakdown -->
-                            <div class="pt-2 border-t border-white/5">
-                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Critic Ratings Breakdown</h4>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <% if (movie.Ratings && movie.Ratings.length > 0) { %>
-                                        <% movie.Ratings.forEach(function(r) { %>
-                                            <div class="bg-slate-950/40 border border-white/5 rounded-2xl p-3.5 flex items-center justify-between hover:bg-slate-900/45 transition">
-                                                <div class="flex items-center gap-2.5 min-w-0">
-                                                    <% if (r.Source === "Internet Movie Database") { %>
-                                                        <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-xl bg-accent-imdb text-black font-extrabold text-[10px]">IMDB</span>
-                                                    <% } else if (r.Source === "Rotten Tomatoes") { %>
-                                                        <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-xl bg-accent-rotten text-white font-extrabold text-[10px]">TOM</span>
-                                                    <% } else if (r.Source === "Metacritic") { %>
-                                                        <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-xl bg-accent-meta text-white font-extrabold text-[10px]">META</span>
-                                                    <% } else { %>
-                                                        <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-xl bg-slate-800 text-white font-bold text-xs"><i class="fas fa-star"></i></span>
-                                                    <% } %>
-                                                    <div class="min-w-0">
-                                                        <h5 class="font-bold text-white text-xs truncate"><%= r.Source %></h5>
-                                                        <p class="text-[11px] text-slate-400 font-medium">Official Rating</p>
-                                                    </div>
-                                                </div>
-                                                <span class="text-sm font-black text-white shrink-0 pl-2"><%= r.Value %></span>
-                                            </div>
-                                        <% }); %>
-                                    <% } else { %>
-                                        <div class="col-span-full py-4 text-center bg-slate-950/20 rounded-2xl border border-white/5">
-                                            <p class="text-slate-400 text-xs">No external critic reviews recorded.</p>
-                                        </div>
-                                    <% } %>
-                                </div>
-                            </div>
-
-                            <!-- Academy Awards (Oscars) & Honors -->
-                            <% 
-                            const oscarWins = movie.Oscars ? movie.Oscars.filter(item => item.won) : [];
-                            const oscarNoms = movie.Oscars ? movie.Oscars.filter(item => !item.won) : [];
-                            const hasOscars = oscarWins.length > 0 || oscarNoms.length > 0;
+                            <% const wins = (movie.Oscars || []).filter(a => a.won);
+                               const nominations = (movie.Oscars || []).filter(a => !a.won);
+                               const awardGroups = [];
+                               if (isSeries && movie.Emmys && (movie.Emmys.wins || movie.Emmys.nominations)) awardGroups.push({ name: 'Primetime Emmys', emmy: true, ...movie.Emmys });
+                               if (wins.length || nominations.length) awardGroups.push({ name: 'Academy Awards (Oscars)', wins: wins.length, nominations: nominations.length, source: 'Local Oscar records', categories: [], winCategories: wins.map(a => a.category), nominationCategories: nominations.map(a => a.category) });
                             %>
-                            <div class="pt-2 border-t border-white/5">
-                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Academy Awards & Recognition</h4>
-                                <% if (hasOscars) { %>
-                                    <div class="bg-slate-950/40 border border-amber-500/20 rounded-2xl p-4.5 flex items-start sm:items-center gap-4 relative overflow-hidden">
-                                        <div class="absolute -right-6 -bottom-6 text-amber-500/5 text-7xl pointer-events-none">
-                                            <i class="fas fa-award"></i>
-                                        </div>
-                                        <div class="w-11 h-11 shrink-0 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/5">
-                                            <i class="fas fa-trophy text-base"></i>
+                            <% awardGroups.forEach(group => { %>
+                                <section class="pt-4 border-t border-white/5" aria-label="<%= group.name %>">
+                                    <h4 class="text-xs font-bold uppercase tracking-wider award-text mb-3"><%= group.name %></h4>
+                                    <div class="award-card rounded-2xl p-4 flex items-start gap-4">
+                                        <div class="award-text shrink-0 mt-1" aria-hidden="true">
+                                            <% if (group.emmy) { %>
+                                                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="8" width="24" height="17" rx="3"/><path d="m11 3 5 5 5-5M11 29h10"/><path d="m16 12 1.2 3.5H21l-3 2.2 1.2 3.6-3.2-2.2-3.2 2.2 1.2-3.6-3-2.2h3.8z"/></svg>
+                                            <% } else { %><i class="fas fa-trophy text-2xl"></i><% } %>
                                         </div>
                                         <div class="min-w-0 flex-1">
-                                            <span class="text-xs text-amber-400/90 block uppercase font-bold tracking-wider mb-0.5">Academy Awards (Oscars)</span>
-                                            
-                                            <% if (oscarWins.length > 0) { %>
-                                                <h5 class="text-sm font-bold text-amber-400">
-                                                    Won <%= oscarWins.length %> Oscar<%= oscarWins.length > 1 ? 's' : '' %>
-                                                </h5>
-                                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-                                                    <strong class="text-slate-300 font-semibold">Won for:</strong> 
-                                                    <%= oscarWins.map(w => w.category).join(', ') %>
-                                                </p>
+                                            <% if (group.wins) { %>
+                                                <h5 class="text-sm font-bold award-text"><%= group.recorded ? 'Recorded wins:' : 'Won' %> <%= group.wins %> <%= group.emmy ? (group.wins === 1 ? 'Primetime Emmy' : 'Primetime Emmys') : (group.wins === 1 ? 'Oscar' : 'Oscars') %></h5>
+                                                <% if (group.winCategories && group.winCategories.length) { %><p class="text-xs award-text mt-1">Won for: <%= group.winCategories.join(', ') %></p><% } %>
                                             <% } %>
-
-                                            <% if (oscarNoms.length > 0) { %>
-                                                <div class="<%= oscarWins.length > 0 ? 'mt-2.5 pt-2.5 border-t border-white/5' : '' %>">
-                                                    <h5 class="text-sm font-bold text-slate-400">
-                                                        Nominated for <%= oscarNoms.length %> Oscar<%= oscarNoms.length > 1 ? 's' : '' %>
-                                                    </h5>
-                                                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-                                                        <strong class="text-slate-300 font-semibold">Nominated for:</strong> 
-                                                        <%= oscarNoms.map(n => n.category).join(', ') %>
-                                                    </p>
+                                            <% if (group.nominations) { %>
+                                                <div class="<%= group.wins ? 'mt-2.5 pt-2.5 border-t border-white/10' : '' %>">
+                                                    <h5 class="text-sm font-bold award-text"><%= group.recorded ? 'Recorded nominations:' : 'Nominated for' %> <%= group.nominations %> <%= group.emmy ? (group.nominations === 1 ? 'Primetime Emmy' : 'Primetime Emmys') : (group.nominations === 1 ? 'Oscar' : 'Oscars') %></h5>
+                                                    <% if (group.nominationCategories && group.nominationCategories.length) { %><p class="text-xs award-text mt-1">Nominated for: <%= group.nominationCategories.join(', ') %></p><% } %>
                                                 </div>
                                             <% } %>
-
-                                            <% if (movie.Awards && movie.Awards !== "N/A") { %>
-                                                <p class="text-[11px] text-slate-400 mt-2 font-medium">
-                                                    <i class="fas fa-certificate text-amber-400/70 mr-1 text-[10px]"></i>
-                                                    <%= movie.Awards %>
-                                                </p>
-                                            <% } %>
+                                            <% if (group.categories && group.categories.length) { %><p class="text-xs award-text mt-2"><%= group.categories.join('; ') %></p><% } %>
+                                            <p class="text-[11px] award-text mt-2">via <%= group.source %><%= group.recorded ? ' · recorded honors, incomplete coverage' : '' %></p>
                                         </div>
                                     </div>
-                                <% } else if (movie.Awards && movie.Awards !== "N/A") { %>
-                                    <div class="bg-slate-950/40 border border-white/5 rounded-2xl p-4 flex items-center gap-3.5">
-                                        <div class="w-10 h-10 shrink-0 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
-                                            <i class="fas fa-award text-base"></i>
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <span class="text-xs text-slate-400 block uppercase font-bold tracking-wider mb-0.5">Industry Honors</span>
-                                            <p class="text-xs text-slate-300 font-medium"><%= movie.Awards %></p>
-                                        </div>
-                                    </div>
-                                <% } else { %>
-                                    <div class="py-4 text-center bg-slate-950/20 rounded-2xl border border-white/5">
-                                        <p class="text-slate-400 text-xs">No Academy Awards or nominations on record for this title.</p>
-                                    </div>
-                                <% } %>
-                            </div>
+                                </section>
+                            <% }) %>
+                            <% if (!isSeries && hasValue(movie.Awards)) { %><p class="text-xs text-slate-300 pt-4 border-t border-white/5"><%= movie.Awards %></p><% } %>
                         </div>
                     </div>
 
@@ -807,44 +687,47 @@
                     <div class="glass rounded-3xl overflow-hidden flex flex-col flex-1">
                         <!-- Navigation Headers -->
                         <div role="tablist" aria-label="Movie Details Tabs" class="flex border-b border-white/5 bg-slate-900/30 p-2 gap-1 overflow-x-auto no-scrollbar">
-                            <button type="button" onclick="switchTab('castTab')" id="btn-castTab" role="tab" aria-selected="true" aria-controls="castTab" class="tab-btn flex-1 py-3 px-4 text-xs font-bold rounded-2xl transition duration-300 text-white bg-brand-500/10 border border-brand-500/20 whitespace-nowrap cursor-pointer">
-                                <i class="fas fa-users mr-1.5"></i> Cast & Crew
+                            <button type="button" onclick="switchTab('castTab')" id="btn-castTab" role="tab" aria-selected="true" aria-controls="castTab" class="tab-btn flex-1 py-3 px-3 sm:px-4 text-xs font-bold rounded-2xl transition duration-300 text-white bg-brand-500/10 border border-brand-500/20 whitespace-nowrap cursor-pointer">
+                                <i class="fas fa-users mr-1.5 hidden sm:inline-block"></i> Cast & Crew
                             </button>
-                            <button type="button" onclick="switchTab('metaTab')" id="btn-metaTab" role="tab" aria-selected="false" aria-controls="metaTab" class="tab-btn flex-1 py-3 px-4 text-xs font-semibold rounded-2xl transition duration-300 text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap cursor-pointer">
-                                <i class="fas fa-info-circle mr-1.5"></i> Specifications
+                            <% if (isSeries) { %>
+                                <button type="button" id="btn-episodesTab" aria-label="Episodes & Seasons" role="tab" aria-selected="false" aria-controls="episodesTab" tabindex="-1" class="tab-btn flex-1 py-3 px-3 sm:px-4 text-xs font-semibold rounded-2xl transition text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap">
+                                    <i class="fas fa-list mr-1.5 hidden sm:inline-block" aria-hidden="true"></i> Episodes<span class="hidden sm:inline"> & Seasons</span>
+                                </button>
+                            <% } %>
+                            <button type="button" tabindex="-1" onclick="switchTab('metaTab')" id="btn-metaTab" role="tab" aria-selected="false" aria-controls="metaTab" class="tab-btn flex-1 py-3 px-3 sm:px-4 text-xs font-semibold rounded-2xl transition duration-300 text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap cursor-pointer">
+                                <i class="fas fa-info-circle mr-1.5 hidden sm:inline-block"></i> Specifications
                             </button>
                         </div>
-                        
+
                         <!-- Panel Body -->
                         <div class="p-6 md:p-8 flex-1">
-                            
+
                             <!-- Panel 1: Cast & Crew -->
                             <div id="castTab" role="tabpanel" aria-labelledby="btn-castTab" tabindex="0" class="tab-content block space-y-6">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div class="bg-slate-950/30 border border-white/5 rounded-2xl p-4.5">
-                                        <h4 class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Director</h4>
+                                    <% if (!isSeries || hasValue(movie.Director)) { %><div class="bg-slate-950/30 border border-white/5 rounded-2xl p-4.5"><h4 class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Director</h4>
                                         <p class="text-base font-bold text-white">
                                             <%= movie.Director !== "N/A" ? movie.Director : "Unknown" %>
                                         </p>
-                                    </div>
-                                    <div class="bg-slate-950/30 border border-white/5 rounded-2xl p-4.5">
-                                        <h4 class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Writer</h4>
+                                    </div><% } %>
+                                    <% if (!isSeries || hasValue(movie.Writer)) { %><div class="bg-slate-950/30 border border-white/5 rounded-2xl p-4.5"><h4 class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Writer</h4>
                                         <p class="text-base font-bold text-white truncate" title="<%= movie.Writer %>">
                                             <%= movie.Writer !== "N/A" ? movie.Writer : "Unknown" %>
                                         </p>
-                                    </div>
+                                    </div><% } %>
                                 </div>
-                                
+
                                 <div>
                                     <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-4">Top Cast Details</h4>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                        <% if (movie.DetailedCast && movie.DetailedCast.length > 0) { 
-                                            movie.DetailedCast.forEach(actor => { 
+                                        <% if (movie.DetailedCast && movie.DetailedCast.length > 0) {
+                                            movie.DetailedCast.forEach(actor => {
                                         %>
                                             <div class="bg-slate-950/20 rounded-2xl border border-white/5 p-3 flex items-center gap-3.5 hover:bg-slate-900/40 hover:border-white/10 transition duration-300 group">
-                                                <% if (actor.profile_path) { %>
+                                                <% if (actor.image || actor.profile_path) { %>
                                                     <div class="w-12 h-12 shrink-0 rounded-full overflow-hidden bg-slate-800 border-2 border-white/5 group-hover:border-brand-500/50 transition duration-300">
-                                                        <img src="https://image.tmdb.org/t/p/w185<%= actor.profile_path %>" alt="<%= actor.name %>" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="w-full h-full object-cover">
+                                                        <img src="<%= actor.image || ('https://image.tmdb.org/t/p/w185' + actor.profile_path) %>" alt="<%= actor.name %>" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="w-full h-full object-cover">
                                                         <div class="hidden w-full h-full bg-brand-500/10 flex items-center justify-center text-brand-300 font-bold text-sm">
                                                             <%= actor.name.split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase() %>
                                                         </div>
@@ -859,10 +742,10 @@
                                                     <p class="text-xs text-slate-400 truncate mt-0.5"><%= actor.character %></p>
                                                 </div>
                                             </div>
-                                        <% }); } else { 
+                                        <% }); } else {
                                             const fallbackActors = (movie.Actors && movie.Actors !== "N/A") ? movie.Actors.split(', ') : [];
                                             if (fallbackActors.length > 0) {
-                                                fallbackActors.forEach(actor => { 
+                                                fallbackActors.forEach(actor => {
                                         %>
                                                 <div class="bg-slate-950/20 rounded-2xl border border-white/5 p-3 flex items-center gap-3.5 hover:bg-slate-900/40 hover:border-white/10 transition duration-300 group">
                                                     <div class="w-12 h-12 shrink-0 rounded-full bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-300 font-bold text-sm">
@@ -880,32 +763,29 @@
                                 </div>
                             </div>
 
+                            <% if (isSeries) { %>
+                                <div id="episodesTab" role="tabpanel" aria-labelledby="btn-episodesTab" tabindex="0" class="tab-content hidden space-y-5" data-imdb-id="<%= movie.imdbID %>">
+                                    <h4 class="text-base font-bold text-white">Episode guide</h4>
+                                    <p class="text-xs text-slate-400">Regular seasons start at Season 1. Specials are excluded from watch time.</p>
+                                    <div id="seasonControls"></div>
+                                    <div id="episodeContent" aria-live="polite" aria-busy="false"></div>
+                                    <script id="seriesSeasonData" type="application/json"><%- JSON.stringify(movie.TV ? movie.TV.seasons : []).replace(/</g, '\u003c') %></script>
+                                </div>
+                            <% } %>
                             <!-- Panel 3: Technical Spec Details -->
                             <div id="metaTab" role="tabpanel" aria-labelledby="btn-metaTab" tabindex="0" class="tab-content hidden space-y-4">
                                 <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-4">Specifications & Metadata</h4>
                                 <div class="bg-slate-950/20 border border-white/5 rounded-2xl overflow-hidden">
                                     <table class="w-full text-xs text-left">
                                         <tbody>
-                                            <tr class="border-b border-white/5">
-                                                <th class="px-5 py-3.5 text-slate-300 font-semibold bg-slate-950/20 w-1/3">Language</th>
-                                                <td class="px-5 py-3.5 text-white font-semibold"><%= movie.Language !== "N/A" ? movie.Language : "N/A" %></td>
-                                            </tr>
-                                            <tr class="border-b border-white/5">
-                                                <th class="px-5 py-3.5 text-slate-300 font-semibold bg-slate-950/20">Country</th>
-                                                <td class="px-5 py-3.5 text-white font-semibold"><%= movie.Country !== "N/A" ? movie.Country : "N/A" %></td>
-                                            </tr>
-                                            <tr class="border-b border-white/5">
-                                                <th class="px-5 py-3.5 text-slate-300 font-semibold bg-slate-950/20">Awards</th>
-                                                <td class="px-5 py-3.5 text-white font-semibold leading-relaxed"><%= movie.Awards !== "N/A" ? movie.Awards : "None" %></td>
-                                            </tr>
-                                            <tr class="border-b border-white/5">
-                                                <th class="px-5 py-3.5 text-slate-300 font-semibold bg-slate-950/20">Production</th>
-                                                <td class="px-5 py-3.5 text-white font-semibold"><%= movie.Production !== "N/A" ? movie.Production : "N/A" %></td>
-                                            </tr>
-                                            <tr>
-                                                <th class="px-5 py-3.5 text-slate-300 font-semibold bg-slate-950/20">Release Type</th>
-                                                <td class="px-5 py-3.5 text-white font-semibold capitalize"><%= movie.Type !== "N/A" ? movie.Type : "N/A" %></td>
-                                            </tr>
+                                            <% const specificationRows = [
+                                                ['Language', movie.Language, 'OMDb'], ['Country', movie.Country, 'OMDb'],
+                                                ['Awards', movie.Awards, 'OMDb'], ['Production', studio.value, studio.source], ['Release Type', movie.Type, 'OMDb'],
+                                                ...(isSeries && movie.Metrics ? [ ['Status', movie.Metrics.status.value, movie.Metrics.status.source], ['First aired', movie.Metrics.firstAirDate.value, movie.Metrics.firstAirDate.source], ['Last aired', movie.Metrics.lastAirDate.value, movie.Metrics.lastAirDate.source] ] : [])
+                                            ].filter(row => hasValue(row[1]));
+                                            specificationRows.forEach(row => { %>
+                                                <tr class="border-b border-white/5 last:border-0"><th class="px-5 py-3.5 text-slate-300 font-semibold w-1/3"><%= row[0] %></th><td class="px-5 py-3.5 text-white font-semibold" title="via <%= row[2] %>"><%= row[1] %></td></tr>
+                                            <% }) %>
                                         </tbody>
                                     </table>
                                 </div>
@@ -921,7 +801,12 @@
     <!-- Footer -->
     <footer class="mt-20 border-t border-white/5 bg-[#060412]/60 py-8 px-6 text-center text-xs text-slate-400">
         <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p>© 2026 CineScope. All rights reserved. Cinematic metadata aggregated from OMDB and TMDB APIs.</p>
+            <div class="space-y-2 text-left max-w-2xl" aria-label="Data source credits">
+                <p>© 2026 CineScope. Metadata via <a class="underline hover:text-white" href="https://www.omdbapi.com/">OMDb</a>, <a class="underline hover:text-white" href="https://www.themoviedb.org/">TMDB</a>, <a class="underline hover:text-white" href="https://www.tvmaze.com/">TVMaze</a>, and <a class="underline hover:text-white" href="https://www.wikidata.org/">Wikidata</a>.</p>
+                <p>TVMaze data is licensed under <a class="underline hover:text-white" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA</a>; Wikidata under CC0.</p>
+                <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+                <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg" alt="TMDB" width="48" height="35" loading="lazy">
+            </div>
             <div class="flex gap-4">
                 <a href="/" class="hover:text-brand-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">Home</a>
                 <span class="text-slate-800">|</span>
@@ -932,6 +817,173 @@
 
     <!-- Client-Side Logic Scripts -->
     <script>
+        function handlePosterError(img) {
+            let sources = [];
+            try { sources = JSON.parse(img.dataset.posterSources || '[]'); } catch {}
+            const next = (Number(img.dataset.posterIndex) || 0) + 1;
+            img.dataset.posterIndex = next;
+            if (sources[next] && sources[next].value) { img.src = sources[next].value; return; }
+            img.style.display = 'none';
+            img.nextElementSibling.classList.remove('hidden');
+        }
+
+        // Season data is requested only when the guide opens. Server-side runtime
+        // aggregation may already have warmed these same cached season responses.
+        let guideInitialized = false;
+        let guideGeneration = 0;
+        let guideSeasons = [];
+        const guideResponses = new Map();
+        function guideElement(tag, className, content) {
+            const el = document.createElement(tag);
+            if (className) el.className = className;
+            if (content !== undefined) el.textContent = String(content);
+            return el;
+        }
+        async function guideJSON(url) {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15000);
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                if (!response.ok) throw new Error('Episode data unavailable');
+                return await response.json();
+            } finally { clearTimeout(timeout); }
+        }
+        function guideMessage(message, retry) {
+            const area = document.getElementById('episodeContent');
+            area.replaceChildren(guideElement('p', 'text-sm text-slate-300 py-4', message));
+            area.setAttribute('aria-busy', 'false');
+            if (retry) {
+                const button = guideElement('button', 'px-4 py-2 rounded-xl bg-brand-500/20 text-brand-200 text-sm font-bold focus-visible:ring-2 focus-visible:ring-brand-400', 'Retry');
+                button.type = 'button'; button.addEventListener('click', retry); area.append(button);
+            }
+        }
+        function guideLoading() {
+            const area = document.getElementById('episodeContent');
+            area.setAttribute('aria-busy', 'true');
+            area.replaceChildren(guideElement('p', 'text-xs text-slate-400', 'Loading episodes…'));
+            for (let i = 0; i < 3; i++) {
+                const row = guideElement('div', 'episode-skeleton flex gap-4 py-5 border-b border-white/5');
+                row.setAttribute('aria-hidden', 'true');
+                row.append(guideElement('div', 'w-24 h-16 rounded-xl bg-slate-800 shrink-0'), guideElement('div', 'h-16 w-full rounded-xl bg-slate-800/60'));
+                area.append(row);
+            }
+        }
+        async function initEpisodeGuide(force = false) {
+            if (guideInitialized && !force) return;
+            const panel = document.getElementById('episodesTab');
+            if (!panel) return;
+            guideInitialized = true;
+            guideLoading();
+            try {
+                const embedded = JSON.parse(document.getElementById('seriesSeasonData').textContent);
+                const data = embedded.length && !force ? { seasons: embedded } : await guideJSON('/api/title/' + encodeURIComponent(panel.dataset.imdbId) + '/seasons');
+                guideSeasons = data.seasons;
+                if (!guideSeasons.length) { guideMessage('No seasons are listed for this title.'); return; }
+                renderSeasonControls();
+                const first = guideSeasons.find(s => s.number === 1) || guideSeasons.find(s => s.number > 0) || guideSeasons[0];
+                loadGuideSeason(first.number);
+            } catch { guideMessage("Couldn't load seasons for this show.", () => initEpisodeGuide(true)); }
+        }
+        function renderSeasonControls() {
+            const controls = document.getElementById('seasonControls');
+            controls.replaceChildren();
+            const regular = guideSeasons.filter(s => s.number > 0);
+            const labelFor = season => season.number === 0 ? 'Specials' : 'Season ' + season.number;
+            if (regular.length > 10) {
+                const label = guideElement('label', 'text-xs text-slate-300 block mb-2', 'Choose a season');
+                label.htmlFor = 'seasonSelect'; controls.append(label);
+                const select = guideElement('select', 'w-full sm:w-auto bg-slate-900 border border-white/10 text-sm rounded-xl px-4 py-3 focus-visible:ring-2 focus-visible:ring-brand-400');
+                select.id = 'seasonSelect';
+                regular.forEach(season => { const option = guideElement('option', '', labelFor(season)); option.value = season.number; select.append(option); });
+                select.addEventListener('change', () => loadGuideSeason(Number(select.value)));
+                controls.append(select);
+            } else {
+                const list = guideElement('div', 'flex gap-2 flex-wrap');
+                list.setAttribute('role', 'tablist'); list.setAttribute('aria-label', 'Seasons');
+                regular.forEach((season, index) => {
+                    const button = seasonButton(season, labelFor(season));
+                    button.setAttribute('role', 'tab'); button.setAttribute('aria-selected', 'false'); button.tabIndex = index === 0 ? 0 : -1;
+                    button.addEventListener('keydown', event => {
+                        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                        event.preventDefault();
+                        const next = event.key === 'Home' ? 0 : event.key === 'End' ? regular.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + regular.length) % regular.length;
+                        document.getElementById('season-' + regular[next].number).focus(); loadGuideSeason(regular[next].number);
+                    });
+                    list.append(button);
+                });
+                controls.append(list);
+            }
+            const specials = guideSeasons.find(s => s.number === 0);
+            if (specials) {
+                const separate = guideElement('div', 'mt-3 pt-3 border-t border-white/5');
+                separate.append(seasonButton(specials, 'Specials')); controls.append(separate);
+            }
+        }
+        function seasonButton(season, label) {
+            const button = guideElement('button', 'px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/5 text-slate-300 hover:bg-brand-500/20 focus-visible:ring-2 focus-visible:ring-brand-400', label);
+            button.id = 'season-' + season.number; button.type = 'button'; button.dataset.season = season.number;
+            button.setAttribute('aria-controls', 'episodeContent');
+            button.addEventListener('click', () => loadGuideSeason(season.number));
+            return button;
+        }
+        async function loadGuideSeason(number, retry = false) {
+            const generation = ++guideGeneration;
+            const panel = document.getElementById('episodesTab');
+            const area = document.getElementById('episodeContent');
+            document.querySelectorAll('[data-season]').forEach(button => {
+                const selected = Number(button.dataset.season) === number;
+                if (button.getAttribute('role') === 'tab') { button.setAttribute('aria-selected', String(selected)); button.tabIndex = selected ? 0 : -1; }
+                else button.setAttribute('aria-pressed', String(selected));
+                button.classList.toggle('bg-brand-500/20', selected); button.classList.toggle('text-white', selected);
+            });
+            const select = document.getElementById('seasonSelect');
+            if (select && number > 0) select.value = number;
+            const seasonTab = document.getElementById('season-' + number);
+            if (seasonTab && seasonTab.getAttribute('role') === 'tab') { area.setAttribute('role', 'tabpanel'); area.setAttribute('aria-labelledby', seasonTab.id); area.tabIndex = 0; }
+            else { area.removeAttribute('role'); area.removeAttribute('aria-labelledby'); }
+            guideLoading();
+            try {
+                const data = !retry && guideResponses.get(number) || await guideJSON('/api/title/' + encodeURIComponent(panel.dataset.imdbId) + '/seasons/' + number);
+                if (!data.partial) guideResponses.set(number, data);
+                if (generation !== guideGeneration) return;
+                area.setAttribute('aria-busy', 'false'); area.replaceChildren();
+                if (!data.episodes.length) { guideMessage('No episodes are listed for this season yet.'); return; }
+                const dates = data.episodes.map(e => e.airDate).filter(Boolean).sort();
+                const ratingSource = ['IMDb via OMDb', 'TMDB', 'TVMaze'].find(source => data.episodes.some(e => e.ratingSource === source && e.rating));
+                const ratings = data.episodes.filter(e => e.ratingSource === ratingSource && e.rating).map(e => e.rating);
+                const mean = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
+                area.append(guideElement('h5', 'text-sm font-bold text-white', number === 0 ? 'Specials' : 'Season ' + number));
+                const summary = [data.episodes.length + (data.episodes.length === 1 ? ' episode' : ' episodes'), dates.length ? dates[0] + ' – ' + dates[dates.length - 1] : '', mean ? mean.toFixed(1) + '/10 · ' + ratingSource + ' (' + ratings.length + ' rated)' : ''].filter(Boolean).join(' · ');
+                area.append(guideElement('p', 'text-xs text-slate-300 mt-1 mb-4', summary));
+                if (data.partial) area.append(guideElement('p', 'text-xs text-amber-300 mb-3', 'Some sources are unavailable. Episode details may be incomplete.'));
+                data.episodes.forEach(episode => {
+                    const row = guideElement('article', 'flex flex-col sm:flex-row gap-4 py-5 border-t border-white/10');
+                    if (episode.image) {
+                        const img = guideElement('img', 'w-full sm:w-32 aspect-video object-cover rounded-xl self-start');
+                        img.src = episode.image; img.alt = ''; img.title = 'Still via ' + (episode.sources.image || episode.sources.metadata); img.loading = 'lazy'; img.addEventListener('error', () => img.remove()); row.append(img);
+                    }
+                    const body = guideElement('div', 'min-w-0 flex-1');
+                    body.append(guideElement('h6', 'text-sm font-bold text-white', (episode.special ? 'Special ' : 'S' + number + '.E') + episode.number + ' · ' + (episode.title || 'Untitled episode')));
+                    const future = episode.airDate && Date.parse(episode.airTimestamp || episode.airDate) > Date.now();
+                    const details = [episode.airDate || 'Air date unavailable', episode.runtime ? episode.runtime + ' min' : '', episode.rating ? episode.rating.toFixed(1) + '/10 · ' + episode.ratingSource : ''].filter(Boolean);
+                    const metadata = guideElement('p', 'text-xs text-slate-300 mt-1', details.join(' · '));
+                    metadata.title = 'Episode via ' + episode.sources.metadata + '; air date via ' + (episode.sources.airDate || episode.sources.metadata) + (episode.sources.runtime ? '; runtime via ' + episode.sources.runtime : ''); body.append(metadata);
+                    if (future) body.append(guideElement('span', 'inline-block text-xs font-bold text-brand-200 bg-brand-500/15 rounded-lg px-2 py-1 mt-2', 'Upcoming'));
+                    if (episode.plot) {
+                        const plot = guideElement('p', 'episode-summary text-sm text-slate-300 leading-relaxed mt-3', episode.plot);
+                        plot.title = 'Summary via ' + (episode.sources.plot || episode.sources.metadata);
+                        plot.id = 'episode-plot-' + number + '-' + episode.number + (episode.special ? '-special' : ''); body.append(plot);
+                        if (episode.plot.length > 180) {
+                            const expand = guideElement('button', 'text-xs text-brand-200 hover:text-white font-semibold mt-2 focus-visible:ring-2 focus-visible:ring-brand-400 rounded', 'Read more');
+                            expand.type = 'button'; expand.setAttribute('aria-expanded', 'false'); expand.setAttribute('aria-controls', plot.id);
+                            expand.addEventListener('click', () => { const open = plot.classList.toggle('expanded'); expand.setAttribute('aria-expanded', String(open)); expand.textContent = open ? 'Show less' : 'Read more'; }); body.append(expand);
+                        }
+                    }
+                    row.append(body); area.append(row);
+                });
+            } catch { if (generation === guideGeneration) guideMessage("Couldn't load episodes for this season.", () => loadGuideSeason(number, true)); }
+        }
+
         /* 1. Navbar Search Expandable Action */
         let lastSearchToggle = 0;
         function toggleSearch() {
@@ -943,7 +995,7 @@
             const input = document.getElementById('searchInput');
             const form = document.getElementById('navSearchForm') || (input ? input.closest('form') : null);
             if (!container || !input) return;
-            
+
             if (container.classList.contains('search-active')) {
                 const val = input.value.trim();
                 if (val !== "") {
@@ -989,7 +1041,7 @@
                 if (!input) return;
                 const title = input.value.trim();
                 if (!title) return;
-                
+
                 let history = getSearchHistory();
                 history = history.filter(item => item.toLowerCase() !== title.toLowerCase());
                 history.unshift(title);
@@ -1011,9 +1063,9 @@
             const overlay = document.getElementById('drawerOverlay');
             const btn = document.getElementById('statsDrawerBtn');
             if (!drawer || !overlay) return;
-            
+
             const isClosed = drawer.classList.contains('translate-x-full') || drawer.style.transform === 'translateX(100%)';
-            
+
             if (isClosed) {
                 renderHistory();
                 drawer.classList.remove('translate-x-full');
@@ -1035,7 +1087,7 @@
 
         function escapeHTML(str) {
             if (!str) return '';
-            return str.replace(/[&<>'"]/g, 
+            return str.replace(/[&<>'"]/g,
                 tag => ({
                     '&': '&amp;',
                     '<': '&lt;',
@@ -1131,7 +1183,7 @@
                 <a href="/search?title=${encodeURIComponent(item.title)}" class="group cursor-pointer block relative rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950 animate-fade-in">
                     <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/10 group-hover:border-brand-500/40 group-hover:shadow-lg group-hover:shadow-brand-500/10 transition duration-300 mb-3 aspect-[2/3]">
                         <img src="${escapeHTML(item.img)}" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="h-full w-full object-cover group-hover:scale-105 transition duration-500" alt="${escapeHTML(item.title)} poster" loading="lazy">
-                        
+
                         <div class="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md border border-white/10 text-[11px] font-bold text-amber-400">
                             <i class="fas fa-star text-[10px] text-amber-400"></i>
                             <span>${escapeHTML(item.rating)}</span>
@@ -1161,10 +1213,11 @@
         window.shuffleSpotlight = shuffleSpotlight;
 
         /* 3. Tab Swapping Control */
-        const TAB_IDS = ['castTab', 'metaTab'];
+        const TAB_IDS = ['castTab', 'episodesTab', 'metaTab'].filter(id => document.getElementById(id));
 
         function switchTab(tabId) {
             if (!TAB_IDS.includes(tabId)) return;
+            if (tabId === 'episodesTab') initEpisodeGuide();
 
             TAB_IDS.forEach(id => {
                 const panel = document.getElementById(id);
@@ -1184,11 +1237,13 @@
 
                 if (btn) {
                     if (id === tabId) {
-                        btn.className = "tab-btn flex-1 py-3 px-4 text-xs font-bold rounded-2xl transition duration-300 text-white bg-brand-500/10 border border-brand-500/20 whitespace-nowrap cursor-pointer";
+                        btn.className = "tab-btn flex-1 py-3 px-3 sm:px-4 text-xs font-bold rounded-2xl transition duration-300 text-white bg-brand-500/10 border border-brand-500/20 whitespace-nowrap cursor-pointer";
                         btn.setAttribute('aria-selected', 'true');
+                        btn.tabIndex = 0;
                     } else {
-                        btn.className = "tab-btn flex-1 py-3 px-4 text-xs font-semibold rounded-2xl transition duration-300 text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap cursor-pointer";
+                        btn.className = "tab-btn flex-1 py-3 px-3 sm:px-4 text-xs font-semibold rounded-2xl transition duration-300 text-slate-400 hover:text-white hover:bg-white/5 whitespace-nowrap cursor-pointer";
                         btn.setAttribute('aria-selected', 'false');
+                        btn.tabIndex = -1;
                     }
                 }
             });
@@ -1207,7 +1262,7 @@
             const btn = document.getElementById('toggleRatingsBtn');
             const icon = document.getElementById('toggleRatingsIcon');
             if (!ratingsSec) return;
-            
+
             const isHidden = ratingsSec.classList.contains('hidden') || ratingsSec.style.display === 'none';
             if (isHidden) {
                 ratingsSec.classList.remove('hidden');
@@ -1239,7 +1294,7 @@
             img.src = src;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            
+
             // Allow CSS transition to compile
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
@@ -1382,6 +1437,13 @@
                     btn.addEventListener('click', (e) => {
                         e.preventDefault();
                         switchTab(tabId);
+                    });
+                    btn.addEventListener('keydown', e => {
+                        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+                        e.preventDefault();
+                        const index = TAB_IDS.indexOf(tabId);
+                        const next = e.key === 'Home' ? 0 : e.key === 'End' ? TAB_IDS.length - 1 : (index + (e.key === 'ArrowRight' ? 1 : -1) + TAB_IDS.length) % TAB_IDS.length;
+                        switchTab(TAB_IDS[next]); document.getElementById('btn-' + TAB_IDS[next]).focus();
                     });
                 }
             });
