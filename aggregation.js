@@ -130,7 +130,7 @@ function createAggregation({ httpClient, cache, logger, env = process.env }) {
             const response = await httpClient.get(url, {
                 params, timeout: Math.max(1, Math.min(4000, state.deadline ? state.deadline - Date.now() : 4000)),
                 maxContentLength: 5 * 1024 * 1024,
-                headers: source === 'Wikidata' ? { Accept: 'application/sparql-results+json', 'User-Agent': 'CineScope/2.2 (https://github.com/aambhipatel/filmfinder; title metadata aggregation)' } : undefined
+                headers: source === 'Wikidata' ? { Accept: 'application/sparql-results+json', 'User-Agent': 'Cinematica/2.2 (https://github.com/aambhipatel/cinematica; title metadata aggregation)' } : undefined
             });
             if (source === 'OMDb' && response.data?.Response === 'False') {
                 if (/limit|key|invalid|too many/i.test(response.data.Error || '')) state.partial = true;

@@ -28,7 +28,7 @@ describe('Root Landing Route & Recommended Spotlight', () => {
         const res = await request(app).get('/');
         expect(res.status).toBe(200);
         expect(res.text).toContain('CINE');
-        expect(res.text).toContain('SCOPE');
+        expect(res.text).toContain('MATICA');
         expect(res.text).toContain('Recommended Spotlight');
         expect(res.text).toContain('imdbTop100Data');
         expect(res.text).toContain('shuffleSpotlight()');

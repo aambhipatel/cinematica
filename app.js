@@ -39,7 +39,7 @@ const httpClient = axios.create({
     timeout: 4000,
     headers: {
         'Accept-Encoding': 'gzip,deflate',
-        'User-Agent': 'CineScope/2.0.0 (Production-Ready)'
+        'User-Agent': 'Cinematica/2.0.0 (Production-Ready)'
     }
 });
 
@@ -322,7 +322,7 @@ let server;
 async function bootstrap() {
     await loadOscarData();
     server = app.listen(PORT, () => {
-        logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'CineScope HTTP server operational');
+        logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'Cinematica HTTP server operational');
     });
     return server;
 }

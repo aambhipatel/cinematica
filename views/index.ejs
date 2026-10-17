@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="CineScope - Discover cast, crew, ratings, and production metadata of your favorite movies.">
-    <title>CineScope | Cinematic Stats & Movie Lookup</title>
+    <meta name="description" content="Cinematica - Discover cast, crew, ratings, and production metadata of your favorite movies.">
+    <title>Cinematica | Cinematic Stats & Movie Lookup</title>
 
     <!-- External assets: Fonts, Tailwind CSS, FontAwesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,17 +26,22 @@
                     },
                     colors: {
                         brand: {
-                            50: '#f5f3ff',
-                            100: '#ede9fe',
-                            200: '#ddd6fe',
-                            300: '#c4b5fd',
-                            400: '#a78bfa',
-                            500: '#8b5cf6',
-                            600: '#7c3aed',
-                            700: '#6d28d9',
-                            800: '#5b21b6',
-                            900: '#4c1d95',
-                            950: '#060412',
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            300: '#fcd34d',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            800: '#92400e',
+                            900: '#78350f',
+                            950: '#0b0d10',
+                        },
+                        surface: {
+                            DEFAULT: '#12151a',
+                            subtle: '#181c23',
+                            border: 'rgba(255, 255, 255, 0.08)',
                         },
                         accent: {
                             imdb: '#f5c518',
@@ -79,12 +84,12 @@
         @media (prefers-reduced-motion: reduce) { .episode-skeleton { animation: none; } }
         /* Browser surface styling */
         ::selection {
-            background-color: rgba(139, 92, 246, 0.35);
+            background-color: rgba(245, 158, 11, 0.35);
             color: #ffffff;
         }
 
         :root {
-            caret-color: #a78bfa;
+            caret-color: #fbbf24;
             --award-gold: #fbbf24;
             --award-gold-soft: rgba(251, 191, 36, .1);
             --award-gold-border: rgba(251, 191, 36, .25);
@@ -96,20 +101,20 @@
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #060412;
+            background: #0b0d10;
         }
         ::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.14);
             border-radius: 9999px;
-            border: 2px solid #060412;
+            border: 2px solid #0b0d10;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(167, 139, 250, 0.4);
+            background: rgba(251, 191, 36, 0.4);
         }
 
         /* Custom layout & transition utility classes */
         .glass {
-            background: rgba(15, 12, 33, 0.5);
+            background: rgba(18, 21, 26, 0.72);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -162,8 +167,8 @@
         }
         .poster-hover:hover {
             transform: translateY(-4px) scale(1.02);
-            border-color: rgba(139, 92, 246, 0.3);
-            box-shadow: 0 20px 40px -15px rgba(124, 58, 237, 0.3);
+            border-color: rgba(245, 158, 11, 0.35);
+            box-shadow: 0 20px 40px -15px rgba(245, 158, 11, 0.2);
         }
 
         /* Awards Repeating Border Animation */
@@ -188,7 +193,7 @@
         .awards-card-active {
             position: relative;
             background-size: 200% 200%;
-            background-image: linear-gradient(to right, rgba(245, 158, 11, 0.02), rgba(15, 12, 33, 0.6), rgba(245, 158, 11, 0.06), rgba(15, 12, 33, 0.6));
+            background-image: linear-gradient(to right, rgba(245, 158, 11, 0.04), rgba(24, 28, 35, 0.8), rgba(245, 158, 11, 0.08), rgba(24, 28, 35, 0.8));
             animation: awardsGlow 4s infinite ease-in-out;
         }
     </style>
@@ -201,23 +206,23 @@
    const budget = field('budget', movie && movie.Budget, 'TMDB');
    const studio = field('studio', movie && (movie.Studio || movie.Production));
 %>
-<body class="bg-brand-950 text-slate-100 min-h-screen font-sans antialiased overflow-x-hidden">
+<body class="bg-[#0b0d10] text-slate-100 min-h-screen font-sans antialiased overflow-x-hidden">
 
-    <!-- Cinematic Ambient Background Glow elements -->
+    <!-- Cinematic Ambient Background Glow elements (Subtle 35mm projection warmth) -->
     <div class="fixed inset-0 -z-50 overflow-hidden pointer-events-none">
-        <div class="absolute top-[-25%] left-[-20%] w-[50vw] h-[50vw] rounded-full bg-brand-600/5 blur-[150px] animate-pulse-glow"></div>
-        <div class="absolute bottom-[-15%] right-[-10%] w-[65vw] h-[65vw] rounded-full bg-blue-500/10 blur-[160px] animate-pulse-glow" style="animation-delay: -2s;"></div>
-        <div class="absolute top-[25%] right-[15%] w-[45vw] h-[45vw] rounded-full bg-purple-500/5 blur-[120px] animate-pulse-glow" style="animation-delay: -4s;"></div>
+        <div class="absolute top-[-25%] left-[-20%] w-[50vw] h-[50vw] rounded-full bg-amber-500/[0.03] blur-[150px] animate-pulse-glow"></div>
+        <div class="absolute bottom-[-15%] right-[-10%] w-[65vw] h-[65vw] rounded-full bg-amber-600/[0.025] blur-[160px] animate-pulse-glow" style="animation-delay: -2s;"></div>
+        <div class="absolute top-[25%] right-[15%] w-[45vw] h-[45vw] rounded-full bg-amber-400/[0.02] blur-[120px] animate-pulse-glow" style="animation-delay: -4s;"></div>
     </div>
 
     <!-- Navigation Header -->
     <nav class="sticky top-0 z-40 glass border-b border-white/5 px-6 py-4 flex items-center justify-between">
         <a href="/" class="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950 rounded-xl">
-            <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-brand-600/20 group-hover:scale-105 transition duration-300">
-                <i class="fas fa-film text-white text-sm"></i>
+            <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-amber-400 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition duration-300">
+                <i class="fas fa-film text-slate-950 text-sm"></i>
             </span>
             <span class="text-lg font-black font-display tracking-tight text-white">
-                CINE<span class="text-brand-500">SCOPE</span>
+                CINE<span class="text-brand-400">MATICA</span>
             </span>
         </a>
 
@@ -243,7 +248,7 @@
     </nav>
 
     <!-- Search History Sidebar Drawer -->
-    <div id="statsDrawer" role="dialog" aria-modal="true" aria-labelledby="historyDrawerHeading" class="fixed inset-y-0 right-0 z-[100] w-full max-w-md bg-[#070513]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl translate-x-full drawer-transition flex flex-col">
+    <div id="statsDrawer" role="dialog" aria-modal="true" aria-labelledby="historyDrawerHeading" class="fixed inset-y-0 right-0 z-[100] w-full max-w-md bg-[#101318]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl translate-x-full drawer-transition flex flex-col">
         <div class="flex items-center justify-between p-6 border-b border-white/5">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-400">
@@ -298,14 +303,14 @@
                 <!-- Main Center Search Bar -->
                 <div class="w-full max-w-2xl px-4">
                     <form action="/search" method="GET" onsubmit="saveSearch('heroSearchInput')">
-                        <div class="flex items-center bg-slate-900/60 border border-white/10 hover:border-white/20 focus-within:border-brand-500/60 focus-within:ring-2 focus-within:ring-brand-500/25 rounded-full transition duration-200 shadow-xl backdrop-blur-md p-1.5 pl-5">
-                            <div class="text-slate-400 text-base shrink-0 group-focus-within:text-brand-400 transition" aria-hidden="true">
+                        <div class="flex items-center bg-slate-900/60 border border-white/10 hover:border-white/20 focus-within:border-amber-500/60 focus-within:ring-2 focus-within:ring-amber-500/25 rounded-full transition duration-200 shadow-xl backdrop-blur-md p-1.5 pl-5">
+                            <div class="text-slate-400 text-base shrink-0 group-focus-within:text-amber-400 transition" aria-hidden="true">
                                 <i class="fas fa-search"></i>
                             </div>
                             <input type="text" name="title" id="heroSearchInput" placeholder="Search movies, TV shows, actors..." required aria-label="Search movies, TV shows, actors"
                                 class="w-full bg-transparent border-none outline-none text-white px-4 placeholder-slate-400 text-sm sm:text-base focus:ring-0">
                             <button type="submit" id="heroSearchSubmitBtn"
-                                class="px-6 py-3 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white font-bold rounded-full transition shadow-lg shadow-brand-600/20 text-xs uppercase tracking-wider shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950 cursor-pointer">
+                                class="px-6 py-3 bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-black font-black rounded-full transition shadow-lg shadow-amber-500/20 text-xs uppercase tracking-wider shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950 cursor-pointer">
                                 Search
                             </button>
                         </div>
@@ -316,7 +321,7 @@
                         <span class="text-slate-400 font-medium">Try searching:</span>
                         <% const tags = ['Interstellar', 'The Dark Knight', 'Inception', 'Avatar', 'The Matrix']; %>
                         <% tags.forEach(tag => { %>
-                            <a href="/search?title=<%= encodeURIComponent(tag) %>" class="px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-slate-300 hover:bg-brand-500/15 hover:border-brand-500/30 hover:text-white transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
+                            <a href="/search?title=<%= encodeURIComponent(tag) %>" class="px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-slate-300 hover:bg-amber-500/15 hover:border-amber-500/30 hover:text-amber-200 transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
                                 <%= tag %>
                             </a>
                         <% }) %>
@@ -337,7 +342,7 @@
                 </div>
 
                 <div class="p-5 rounded-2xl glass border border-white/5 flex items-start gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 shrink-0">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
                         <i class="fas fa-trophy text-sm"></i>
                     </div>
                     <div>
@@ -347,7 +352,7 @@
                 </div>
 
                 <div class="p-5 rounded-2xl glass border border-white/5 flex items-start gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
                         <i class="fas fa-clapperboard text-sm"></i>
                     </div>
                     <div>
@@ -368,7 +373,7 @@
                     <div class="flex items-center gap-3">
                         <span class="text-[11px] text-slate-400 font-semibold tracking-wide hidden sm:inline-block">IMDb Top 100</span>
                         <button type="button" onclick="shuffleSpotlight()" id="shuffleSpotlightBtn" aria-label="Shuffle recommended movies"
-                            class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-brand-500/20 text-slate-300 hover:text-brand-300 border border-white/10 hover:border-brand-500/30 text-xs font-semibold transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
+                            class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-amber-500/15 text-slate-300 hover:text-amber-300 border border-white/10 hover:border-amber-500/30 text-xs font-semibold transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
                             <i class="fas fa-shuffle text-[10px]" id="shuffleIcon"></i>
                             <span>Shuffle</span>
                         </button>
@@ -418,8 +423,8 @@
                         ];
                     %>
                     <% suggestions.forEach((item, idx) => { %>
-                        <a href="/search?title=<%= encodeURIComponent(item.title) %>" class="group cursor-pointer block relative rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
-                            <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/10 group-hover:border-brand-500/40 group-hover:shadow-lg group-hover:shadow-brand-500/10 transition duration-300 mb-3 aspect-[2/3]">
+                        <a href="/search?title=<%= encodeURIComponent(item.title) %>" class="group cursor-pointer block relative rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950">
+                            <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/10 group-hover:border-amber-500/40 group-hover:shadow-lg group-hover:shadow-amber-500/10 transition duration-300 mb-3 aspect-[2/3]">
                                 <img src="<%= item.img %>" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="h-full w-full object-cover group-hover:scale-105 transition duration-500" alt="<%= item.title %> poster" loading="lazy">
 
                                 <!-- Rating Badge overlay -->
@@ -430,16 +435,16 @@
 
                                 <!-- Graceful Fallback illustration if image fails -->
                                 <div class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-2xl p-4 text-center">
-                                    <div class="w-10 h-10 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400 mb-2">
+                                    <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 mb-2">
                                         <i class="fas fa-image text-sm"></i>
                                     </div>
                                     <p class="text-xs font-bold text-slate-300 truncate w-full"><%= item.title %></p>
                                     <p class="text-[10px] text-slate-400 mt-1">Image Error</p>
                                 </div>
 
-                                <div class="absolute inset-0 z-10 bg-gradient-to-t from-[#060412] via-[#060412]/20 to-transparent opacity-60 group-hover:opacity-80 transition duration-300" style="transform: translateZ(0);"></div>
+                                <div class="absolute inset-0 z-10 bg-gradient-to-t from-[#0b0d10] via-[#0b0d10]/30 to-transparent opacity-70 group-hover:opacity-85 transition duration-300" style="transform: translateZ(0);"></div>
                             </div>
-                            <h3 class="font-bold truncate text-slate-200 group-hover:text-brand-400 transition text-sm">
+                            <h3 class="font-bold truncate text-slate-200 group-hover:text-amber-400 transition text-sm">
                                 <%= item.title %>
                             </h3>
                             <div class="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
@@ -466,7 +471,7 @@
 
                             <!-- Poster Fallback if load fails -->
                             <div class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-3xl p-6 text-center space-y-3">
-                                <div class="w-16 h-16 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400">
+                                <div class="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400">
                                     <i class="fas fa-image text-2xl"></i>
                                 </div>
                                 <div>
@@ -476,7 +481,7 @@
                             </div>
                         <% } else { %>
                             <div class="w-full aspect-[2/3] flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-3xl p-6 text-center space-y-3">
-                                <div class="w-16 h-16 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400">
+                                <div class="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400">
                                     <i class="fas fa-film text-2xl"></i>
                                 </div>
                                 <div>
@@ -486,7 +491,7 @@
                             </div>
                         <% } %>
 
-                        <div class="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-[#060412]/80 via-transparent to-transparent opacity-60"></div>
+                        <div class="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-[#0b0d10]/85 via-transparent to-transparent opacity-65"></div>
                     </div>
 
                     <!-- Quick Specs Grid -->
@@ -541,14 +546,14 @@
 
                     <!-- Title block & plot -->
                     <div class="glass p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[220px]">
-                        <div class="absolute -right-16 -top-16 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl"></div>
+                        <div class="absolute -right-16 -top-16 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
 
                         <div>
                             <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight font-display mb-3 text-white leading-tight">
                                 <%= movie.Title %>
                             </h1>
                             <div class="flex flex-wrap items-center gap-2 text-xs mb-6">
-                                <span class="text-brand-300 font-bold bg-brand-500/15 border border-brand-500/20 px-3 py-1 rounded-full"><%= movie.Year %></span>
+                                <span class="text-amber-300 font-bold bg-amber-500/15 border border-amber-500/25 px-3 py-1 rounded-full"><%= movie.Year %></span>
                                 <span class="text-slate-500">•</span>
                                 <span class="text-slate-300 font-semibold"><%= movie.Genre %></span>
                                 <%
@@ -579,13 +584,13 @@
                                 <% } %>
                                 <% if (movie.Rated && movie.Rated !== "N/A") { %>
                                     <span class="text-slate-500">•</span>
-                                    <span class="px-2.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs font-bold tracking-wide uppercase"><%= movie.Rated %></span>
+                                    <span class="px-2.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 text-xs font-bold tracking-wide uppercase"><%= movie.Rated %></span>
                                 <% } %>
                             </div>
                         </div>
 
-                        <div class="mt-2 border border-brand-500/20 bg-brand-500/5 px-5 py-4 rounded-2xl relative max-w-3xl">
-                            <i class="fas fa-quote-left absolute -top-2 left-2 text-brand-500/20 text-3xl"></i>
+                        <div class="mt-2 border border-amber-500/20 bg-amber-500/[0.04] px-5 py-4 rounded-2xl relative max-w-3xl">
+                            <i class="fas fa-quote-left absolute -top-2 left-2 text-amber-500/20 text-3xl"></i>
                             <p class="text-slate-200 text-sm sm:text-base leading-relaxed italic relative z-10 pl-2">
                                 <%= movie.Plot !== "N/A" ? movie.Plot : "No plot description available." %>
                             </p>
@@ -636,7 +641,7 @@
                                             <div class="relative w-14 h-14 flex items-center justify-center">
                                                 <svg class="w-full h-full circle-progress" viewBox="0 0 36 36" aria-hidden="true">
                                                     <circle cx="18" cy="18" r="15.9155" stroke-width="3" stroke="#1e293b" fill="none"/>
-                                                    <circle cx="18" cy="18" r="15.9155" pathLength="100" stroke-dasharray="<%= percent %> 100" stroke-width="3" stroke-linecap="round" stroke="<%= score.label === 'IMDb' ? '#f5c518' : score.label === 'Tomatometer' ? '#f84a25' : score.label === 'Metacritic' ? '#66cc33' : '#a78bfa' %>" fill="none"/>
+                                                    <circle cx="18" cy="18" r="15.9155" pathLength="100" stroke-dasharray="<%= percent %> 100" stroke-width="3" stroke-linecap="round" stroke="<%= score.label === 'IMDb' ? '#f5c518' : score.label === 'Tomatometer' ? '#f84a25' : score.label === 'Metacritic' ? '#66cc33' : '#f59e0b' %>" fill="none"/>
                                                 </svg>
                                                 <span class="absolute text-xs font-black text-white"><%= score.value %><span class="block text-[11px] text-slate-300">/<%= score.max %></span></span>
                                             </div>
@@ -687,7 +692,7 @@
                     <div class="glass rounded-3xl overflow-hidden flex flex-col flex-1">
                         <!-- Navigation Headers -->
                         <div role="tablist" aria-label="Movie Details Tabs" class="flex border-b border-white/5 bg-slate-900/30 p-2 gap-1 overflow-x-auto no-scrollbar">
-                            <button type="button" onclick="switchTab('castTab')" id="btn-castTab" role="tab" aria-selected="true" aria-controls="castTab" class="tab-btn flex-1 py-3 px-3 sm:px-4 text-xs font-bold rounded-2xl transition duration-300 text-white bg-brand-500/10 border border-brand-500/20 whitespace-nowrap cursor-pointer">
+                            <button type="button" onclick="switchTab('castTab')" id="btn-castTab" role="tab" aria-selected="true" aria-controls="castTab" class="tab-btn flex-1 py-3 px-3 sm:px-4 text-xs font-bold rounded-2xl transition duration-300 text-amber-300 bg-amber-500/15 border border-amber-500/30 whitespace-nowrap cursor-pointer">
                                 <i class="fas fa-users mr-1.5 hidden sm:inline-block"></i> Cast & Crew
                             </button>
                             <% if (isSeries) { %>
@@ -726,19 +731,19 @@
                                         %>
                                             <div class="bg-slate-950/20 rounded-2xl border border-white/5 p-3 flex items-center gap-3.5 hover:bg-slate-900/40 hover:border-white/10 transition duration-300 group">
                                                 <% if (actor.image || actor.profile_path) { %>
-                                                    <div class="w-12 h-12 shrink-0 rounded-full overflow-hidden bg-slate-800 border-2 border-white/5 group-hover:border-brand-500/50 transition duration-300">
+                                                    <div class="w-12 h-12 shrink-0 rounded-full overflow-hidden bg-slate-800 border-2 border-white/5 group-hover:border-amber-500/50 transition duration-300">
                                                         <img src="<%= actor.image || ('https://image.tmdb.org/t/p/w185' + actor.profile_path) %>" alt="<%= actor.name %>" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="w-full h-full object-cover">
-                                                        <div class="hidden w-full h-full bg-brand-500/10 flex items-center justify-center text-brand-300 font-bold text-sm">
+                                                        <div class="hidden w-full h-full bg-amber-500/10 flex items-center justify-center text-amber-300 font-bold text-sm">
                                                             <%= actor.name.split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase() %>
                                                         </div>
                                                     </div>
                                                 <% } else { %>
-                                                    <div class="w-12 h-12 shrink-0 rounded-full bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-300 font-bold text-sm">
+                                                    <div class="w-12 h-12 shrink-0 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-300 font-bold text-sm">
                                                         <%= actor.name.split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase() %>
                                                     </div>
                                                 <% } %>
                                                 <div class="min-w-0 flex-1">
-                                                    <h5 class="font-bold text-white truncate group-hover:text-brand-400 transition text-sm"><%= actor.name %></h5>
+                                                    <h5 class="font-bold text-white truncate group-hover:text-amber-400 transition text-sm"><%= actor.name %></h5>
                                                     <p class="text-xs text-slate-400 truncate mt-0.5"><%= actor.character %></p>
                                                 </div>
                                             </div>
@@ -748,11 +753,11 @@
                                                 fallbackActors.forEach(actor => {
                                         %>
                                                 <div class="bg-slate-950/20 rounded-2xl border border-white/5 p-3 flex items-center gap-3.5 hover:bg-slate-900/40 hover:border-white/10 transition duration-300 group">
-                                                    <div class="w-12 h-12 shrink-0 rounded-full bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-300 font-bold text-sm">
+                                                    <div class="w-12 h-12 shrink-0 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-300 font-bold text-sm">
                                                         <%= actor.split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase() %>
                                                     </div>
                                                     <div class="min-w-0 flex-1">
-                                                        <h5 class="font-bold text-white truncate group-hover:text-brand-400 transition text-sm"><%= actor %></h5>
+                                                        <h5 class="font-bold text-white truncate group-hover:text-amber-400 transition text-sm"><%= actor %></h5>
                                                         <p class="text-xs text-slate-400 truncate mt-0.5">Actor</p>
                                                     </div>
                                                 </div>
@@ -799,18 +804,18 @@
     </main>
 
     <!-- Footer -->
-    <footer class="mt-20 border-t border-white/5 bg-[#060412]/60 py-8 px-6 text-center text-xs text-slate-400">
+    <footer class="mt-20 border-t border-white/5 bg-[#0b0d10]/90 py-8 px-6 text-center text-xs text-slate-400">
         <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="space-y-2 text-left max-w-2xl" aria-label="Data source credits">
-                <p>© 2026 CineScope. Metadata via <a class="underline hover:text-white" href="https://www.omdbapi.com/">OMDb</a>, <a class="underline hover:text-white" href="https://www.themoviedb.org/">TMDB</a>, <a class="underline hover:text-white" href="https://www.tvmaze.com/">TVMaze</a>, and <a class="underline hover:text-white" href="https://www.wikidata.org/">Wikidata</a>.</p>
+                <p>© 2026 Cinematica. Metadata via <a class="underline hover:text-white" href="https://www.omdbapi.com/">OMDb</a>, <a class="underline hover:text-white" href="https://www.themoviedb.org/">TMDB</a>, <a class="underline hover:text-white" href="https://www.tvmaze.com/">TVMaze</a>, and <a class="underline hover:text-white" href="https://www.wikidata.org/">Wikidata</a>.</p>
                 <p>TVMaze data is licensed under <a class="underline hover:text-white" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA</a>; Wikidata under CC0.</p>
                 <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
                 <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg" alt="TMDB" width="48" height="35" loading="lazy">
             </div>
             <div class="flex gap-4">
-                <a href="/" class="hover:text-brand-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">Home</a>
+                <a href="/" class="hover:text-amber-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded">Home</a>
                 <span class="text-slate-800">|</span>
-                <button type="button" onclick="toggleStats()" id="footerLogsBtn" class="hover:text-brand-400 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">Search History</button>
+                <button type="button" onclick="toggleStats()" id="footerLogsBtn" class="hover:text-amber-400 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded">Search History</button>
             </div>
         </div>
     </footer>
@@ -853,7 +858,7 @@
             area.replaceChildren(guideElement('p', 'text-sm text-slate-300 py-4', message));
             area.setAttribute('aria-busy', 'false');
             if (retry) {
-                const button = guideElement('button', 'px-4 py-2 rounded-xl bg-brand-500/20 text-brand-200 text-sm font-bold focus-visible:ring-2 focus-visible:ring-brand-400', 'Retry');
+                const button = guideElement('button', 'px-4 py-2 rounded-xl bg-amber-500/20 text-amber-200 text-sm font-bold focus-visible:ring-2 focus-visible:ring-amber-400', 'Retry');
                 button.type = 'button'; button.addEventListener('click', retry); area.append(button);
             }
         }
@@ -892,7 +897,7 @@
             if (regular.length > 10) {
                 const label = guideElement('label', 'text-xs text-slate-300 block mb-2', 'Choose a season');
                 label.htmlFor = 'seasonSelect'; controls.append(label);
-                const select = guideElement('select', 'w-full sm:w-auto bg-slate-900 border border-white/10 text-sm rounded-xl px-4 py-3 focus-visible:ring-2 focus-visible:ring-brand-400');
+                const select = guideElement('select', 'w-full sm:w-auto bg-slate-900 border border-white/10 text-sm rounded-xl px-4 py-3 focus-visible:ring-2 focus-visible:ring-amber-400');
                 select.id = 'seasonSelect';
                 regular.forEach(season => { const option = guideElement('option', '', labelFor(season)); option.value = season.number; select.append(option); });
                 select.addEventListener('change', () => loadGuideSeason(Number(select.value)));
@@ -920,7 +925,7 @@
             }
         }
         function seasonButton(season, label) {
-            const button = guideElement('button', 'px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/5 text-slate-300 hover:bg-brand-500/20 focus-visible:ring-2 focus-visible:ring-brand-400', label);
+            const button = guideElement('button', 'px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/5 text-slate-300 hover:bg-amber-500/20 focus-visible:ring-2 focus-visible:ring-amber-400', label);
             button.id = 'season-' + season.number; button.type = 'button'; button.dataset.season = season.number;
             button.setAttribute('aria-controls', 'episodeContent');
             button.addEventListener('click', () => loadGuideSeason(season.number));
@@ -934,7 +939,7 @@
                 const selected = Number(button.dataset.season) === number;
                 if (button.getAttribute('role') === 'tab') { button.setAttribute('aria-selected', String(selected)); button.tabIndex = selected ? 0 : -1; }
                 else button.setAttribute('aria-pressed', String(selected));
-                button.classList.toggle('bg-brand-500/20', selected); button.classList.toggle('text-white', selected);
+                button.classList.toggle('bg-amber-500/20', selected); button.classList.toggle('text-white', selected);
             });
             const select = document.getElementById('seasonSelect');
             if (select && number > 0) select.value = number;
@@ -968,13 +973,13 @@
                     const details = [episode.airDate || 'Air date unavailable', episode.runtime ? episode.runtime + ' min' : '', episode.rating ? episode.rating.toFixed(1) + '/10 · ' + episode.ratingSource : ''].filter(Boolean);
                     const metadata = guideElement('p', 'text-xs text-slate-300 mt-1', details.join(' · '));
                     metadata.title = 'Episode via ' + episode.sources.metadata + '; air date via ' + (episode.sources.airDate || episode.sources.metadata) + (episode.sources.runtime ? '; runtime via ' + episode.sources.runtime : ''); body.append(metadata);
-                    if (future) body.append(guideElement('span', 'inline-block text-xs font-bold text-brand-200 bg-brand-500/15 rounded-lg px-2 py-1 mt-2', 'Upcoming'));
+                    if (future) body.append(guideElement('span', 'inline-block text-xs font-bold text-amber-200 bg-amber-500/15 rounded-lg px-2 py-1 mt-2', 'Upcoming'));
                     if (episode.plot) {
                         const plot = guideElement('p', 'episode-summary text-sm text-slate-300 leading-relaxed mt-3', episode.plot);
                         plot.title = 'Summary via ' + (episode.sources.plot || episode.sources.metadata);
                         plot.id = 'episode-plot-' + number + '-' + episode.number + (episode.special ? '-special' : ''); body.append(plot);
                         if (episode.plot.length > 180) {
-                            const expand = guideElement('button', 'text-xs text-brand-200 hover:text-white font-semibold mt-2 focus-visible:ring-2 focus-visible:ring-brand-400 rounded', 'Read more');
+                            const expand = guideElement('button', 'text-xs text-amber-200 hover:text-white font-semibold mt-2 focus-visible:ring-2 focus-visible:ring-amber-400 rounded', 'Read more');
                             expand.type = 'button'; expand.setAttribute('aria-expanded', 'false'); expand.setAttribute('aria-controls', plot.id);
                             expand.addEventListener('click', () => { const open = plot.classList.toggle('expanded'); expand.setAttribute('aria-expanded', String(open)); expand.textContent = open ? 'Show less' : 'Read more'; }); body.append(expand);
                         }
@@ -1119,13 +1124,13 @@
             }
 
             list.innerHTML = history.map(item => `
-                <div class="flex items-center justify-between bg-slate-900/60 border border-white/5 p-3.5 rounded-2xl hover:border-brand-500/20 transition group">
+                <div class="flex items-center justify-between bg-slate-900/60 border border-white/5 p-3.5 rounded-2xl hover:border-amber-500/30 transition group">
                     <div class="flex items-center gap-3 min-w-0">
-                        <i class="fas fa-search text-xs text-slate-400 group-hover:text-brand-400 transition" aria-hidden="true"></i>
+                        <i class="fas fa-search text-xs text-slate-400 group-hover:text-amber-400 transition" aria-hidden="true"></i>
                         <span class="font-bold text-slate-200 text-sm truncate pr-2">${escapeHTML(item)}</span>
                     </div>
                     <a href="/search?title=${encodeURIComponent(item)}"
-                        class="px-3.5 py-1.5 text-xs bg-brand-500/10 hover:bg-brand-500 text-brand-300 hover:text-white rounded-xl font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+                        class="px-3.5 py-1.5 text-xs bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-black rounded-xl font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400">
                         Search
                     </a>
                 </div>
@@ -1180,8 +1185,8 @@
             const selected = copy.slice(0, 5);
 
             grid.innerHTML = selected.map(item => `
-                <a href="/search?title=${encodeURIComponent(item.title)}" class="group cursor-pointer block relative rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950 animate-fade-in">
-                    <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/10 group-hover:border-brand-500/40 group-hover:shadow-lg group-hover:shadow-brand-500/10 transition duration-300 mb-3 aspect-[2/3]">
+                <a href="/search?title=${encodeURIComponent(item.title)}" class="group cursor-pointer block relative rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950 animate-fade-in">
+                    <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/10 group-hover:border-amber-500/40 group-hover:shadow-lg group-hover:shadow-amber-500/10 transition duration-300 mb-3 aspect-[2/3]">
                         <img src="${escapeHTML(item.img)}" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="h-full w-full object-cover group-hover:scale-105 transition duration-500" alt="${escapeHTML(item.title)} poster" loading="lazy">
 
                         <div class="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md border border-white/10 text-[11px] font-bold text-amber-400">
@@ -1190,16 +1195,16 @@
                         </div>
 
                         <div class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-2xl p-4 text-center">
-                            <div class="w-10 h-10 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-400 mb-2">
+                            <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 mb-2">
                                 <i class="fas fa-film text-sm"></i>
                             </div>
                             <p class="text-xs font-bold text-slate-300 truncate w-full">${escapeHTML(item.title)}</p>
                             <p class="text-[10px] text-slate-400 mt-1">${escapeHTML(item.year)}</p>
                         </div>
 
-                        <div class="absolute inset-0 z-10 bg-gradient-to-t from-[#060412] via-[#060412]/20 to-transparent opacity-60 group-hover:opacity-80 transition duration-300" style="transform: translateZ(0);"></div>
+                        <div class="absolute inset-0 z-10 bg-gradient-to-t from-[#0b0d10] via-[#0b0d10]/30 to-transparent opacity-70 group-hover:opacity-85 transition duration-300" style="transform: translateZ(0);"></div>
                     </div>
-                    <h3 class="font-bold truncate text-slate-200 group-hover:text-brand-400 transition text-sm">
+                    <h3 class="font-bold truncate text-slate-200 group-hover:text-amber-400 transition text-sm">
                         ${escapeHTML(item.title)}
                     </h3>
                     <div class="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
@@ -1237,7 +1242,7 @@
 
                 if (btn) {
                     if (id === tabId) {
-                        btn.className = "tab-btn flex-1 py-3 px-3 sm:px-4 text-xs font-bold rounded-2xl transition duration-300 text-white bg-brand-500/10 border border-brand-500/20 whitespace-nowrap cursor-pointer";
+                        btn.className = "tab-btn flex-1 py-3 px-3 sm:px-4 text-xs font-bold rounded-2xl transition duration-300 text-amber-300 bg-amber-500/15 border border-amber-500/30 whitespace-nowrap cursor-pointer";
                         btn.setAttribute('aria-selected', 'true');
                         btn.tabIndex = 0;
                     } else {

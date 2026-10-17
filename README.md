@@ -1,10 +1,10 @@
-# CineScope
+# Cinematica
 
-A high-performance cinematic search engine and metadata aggregation service that orchestrates real-time film intelligence, critic analytics, and historical Academy Award records.
+A lightweight, high-performance film metadata aggregator engineered to deliver objective film intelligence without biasing how you view the movie.
 
 ## Architecture
 
-CineScope acts as an aggregation and caching gateway between client browsers and external film metadata providers, backed by an in-memory historical database index.
+Cinematica acts as an aggregation and caching gateway between client browsers and external film metadata providers, backed by an in-memory historical database index.
 
 ```
 Client Browser (SSR / EJS)
@@ -83,8 +83,8 @@ Express.js Application Gateway (Port 3000 / $PORT)
 
 1. **Clone repository and install dependencies:**
    ```bash
-   git clone https://github.com/yourusername/cinescope.git
-   cd cinescope
+   git clone https://github.com/yourusername/cinematica.git
+   cd cinematica
    npm ci
    ```
 
@@ -112,15 +112,15 @@ Express.js Application Gateway (Port 3000 / $PORT)
 
 ```bash
 # Build multi-stage image
-docker build -t cinescope:latest .
+docker build -t cinematica:latest .
 
 # Run container with environment configuration
 docker run -d \
-  --name cinescope \
+  --name cinematica \
   -p 3000:3000 \
   -e OMDB_API_KEY=your_omdb_key \
   -e TMDB_API_KEY=your_tmdb_key \
-  cinescope:latest
+  cinematica:latest
 ```
 
 ### Usage Examples
@@ -208,7 +208,7 @@ Endpoint, authentication, quota, and licensing documentation was checked on Octo
 | [TVMaze](https://www.tvmaze.com/api) | `/lookup/shows?imdb=…`, `/shows/{id}/seasons`, `/seasons/{id}/episodes`, `/shows/{id}/episodes?specials=1`, `/shows/{id}/cast`; no key | At least 20 calls/10 seconds/IP; cooldown on 429. CC BY-SA data with attribution and ShareAlike. Footer links TVMaze and the data license. |
 | [Wikidata](https://www.wikidata.org/wiki/Wikidata:Data_access) | `/sparql`, narrow P345 IMDb lookup, typed currency quantities and award statements; no key | CC0. [Usage constraints](https://www.mediawiki.org/wiki/Wikidata_Query_Service/Implementation#Usage_constraints) include query/time/concurrency limits and 429 backoff. One bounded query per title only when needed. |
 
-Trakt is deliberately not integrated: its [current API Use Policy](https://developer.trakt.tv/docs/api-use-policy) prohibits collecting community ratings to supply another product and recommends contacting support for unlisted use cases. A standalone CineScope rating aggregator is not clearly authorized; a future approved integration can be added. No IMDb, Rotten Tomatoes, Metacritic, Box Office Mojo, or Emmy-site scraping is performed. Missing RT/Metacritic scores stay absent while other legitimate scores remain visible.
+Trakt is deliberately not integrated: its [current API Use Policy](https://developer.trakt.tv/docs/api-use-policy) prohibits collecting community ratings to supply another product and recommends contacting support for unlisted use cases. A standalone Cinematica rating aggregator is not clearly authorized; a future approved integration can be added. No IMDb, Rotten Tomatoes, Metacritic, Box Office Mojo, or Emmy-site scraping is performed. Missing RT/Metacritic scores stay absent while other legitimate scores remain visible.
 
 Emmy dataset candidates were investigated, including [TidyTuesday's Emmy collection](https://github.com/rfordatascience/tidytuesday/blob/main/data/2021/2021-09-21/readme.md), which documents scraping the Emmy website. Upstream reuse rights were not established, so no local Emmy dataset is shipped. Wikidata statements also lack exhaustive show/person/category coverage; they are not presented as definitive career totals. OMDb explicit Emmy counts are preferred, and a show with no verified Emmy records has no Emmy card.
 
