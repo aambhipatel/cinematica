@@ -22,12 +22,12 @@ Express.js Application Gateway (Port 3000 / $PORT)
 ```
 
 ### Request Lifecycle
-1. **Validation & Throttling:** Parses and validates `req.query.title` (1–100 characters). Enforces IP-based rate limiting (30 requests/min on `/search`).
-2. **Cache Resolution:** Checks an in-memory LRU cache using normalized query keys to resolve repeat lookups in sub-millisecond time.
-3. **Upstream Ingestion:** Queries OMDb over HTTPS with a strict 4,000 ms timeout to retrieve core film records and IMDb identifiers.
-4. **Entity Resolution:** Cross-references IMDb IDs against TMDB v3 endpoints to resolve media credits, poster assets, and audience vote metrics.
-5. **Oscar Cross-Referencing:** Queries the pre-indexed in-memory hash map (`Map<string, Nomination[]>`) in $O(1)$ constant time.
-6. **SSR Delivery:** Renders the aggregated data contract to the client via server-side EJS templates.
+1. **Submitted search:** The forms submit q to /search. The EJS results shell restores query, page, type, and year from the URL; its browser controller requests /api/search.
+2. **Validation and cache:** The API validates query/filter bounds, applies IP rate limits, and checks a normalized results key in the shared 500-entry LRU. At most 100 entries can be result pages.
+3. **OMDb search:** A miss makes one HTTPS OMDb s= request with page/type/y. Only title, year, IMDb ID, type, and a safe poster URL are returned. No per-result details are fetched.
+4. **User selection:** A result opens /search?title=tt... and the details route uses OMDb i= for that exact record. Direct recommendations also use IDs. Legacy title-based direct links still use t= for compatibility.
+5. **Details enrichment:** The existing TMDB/TVMaze/Wikidata aggregation and local Oscar index enrich only the selected record, using the existing detail/season caching and failure isolation.
+6. **Delivery and navigation:** EJS renders details. The browser's History API, bounded memory/session cache, and saved scroll positions preserve results across paging, Back/Forward, and reloads.
 
 ## Key Features
 
@@ -128,7 +128,7 @@ docker run -d \
 #### Web Interface
 Navigate to `http://localhost:3000` and submit a title via the query input or trigger quick search directly via query parameters:
 ```text
-http://localhost:3000/search?title=Oppenheimer
+http://localhost:3000/search?q=Oppenheimer
 ```
 
 #### Health & Readiness Verification
@@ -163,6 +163,52 @@ Expected readiness response payload:
 | `TVMAZE_ENABLED` | `string` | `true` | No | Set `false` to disable free TVMaze fallbacks; no API key required. |
 | `WIKIDATA_ENABLED` | `string` | `true` | No | Set `false` to disable Wikidata fallbacks; no API key required. |
 | `LOG_LEVEL` | `string` | `info` | No | Pino logging level. API credentials and upstream request configurations are never logged. |
+
+## Search results and exact title selection
+
+Submitted queries now show a results grid instead of silently choosing OMDb's first title match. The same single EJS view retains the current amber/charcoal design, movie/TV details, awards, episode guide, recommendations, and ten-item localStorage search history. There is no autocomplete or search-as-you-type.
+
+### URLs and navigation
+
+| View | URL example | Behavior |
+| --- | --- | --- |
+| Results | /search?q=batman&page=2&type=movie&year=1989 | Shareable state; filter changes reset page to 1. /?q=... is also restored by the browser controller. |
+| Details | /search?title=tt0096895 | Exact OMDb i= lookup, separate versioned ID cache key. |
+| Details from results | /search?title=tt0096895&from=%2Fsearch%3Fq%3Dbatman%26page%3D2%26type%3Dmovie | A validated same-origin return URL enables Back to results. External/malformed return links are discarded. |
+| Legacy direct details | /search?title=Oppenheimer | Backward-compatible t= lookup for old bookmarks and title-only suggestion links. Search forms never use this path. |
+
+Queries matching tt plus 7–9 digits go directly to exact-ID details. Results use pushState for submissions, filters, and pagination; selecting a title uses a normal link and separate document history entry. Browser Back/Forward restores the prior filters/page/scroll without an API request while a cached response is fresh. Back to results uses browser Back when a matching same-origin referrer is available, otherwise a reload-safe results URL. Up to 20 successful results responses are kept in memory and tab-scoped sessionStorage for one hour, including scroll positions. Storage failures degrade safely. Newly fetched responses renew their client expiry; cache hits do not.
+
+Only submitted queries are stored in localStorage (case-insensitive dedupe, ten entries). History links open results. Result/recommendation clicks never store the title as a submitted search. Recommended Spotlight links use each local entry's IMDb ID and bypass results. Existing direct suggestion links and bookmarks remain supported. No existing route is unused or removed.
+
+### Search API
+
+GET /api/search?q=batman&page=1&type=all&year=1989
+
+| Parameter | Validation |
+| --- | --- |
+| q | Required string; trim and require 1–100 characters; collapse internal whitespace for lookup/cache normalization. |
+| page | Canonical integer 1–100, default 1. |
+| type | all (default), movie, series; episode is accepted only when explicitly requested through the API. UI offers All / Movies / TV Series. |
+| year | Optional four-digit year, 1888 through server current year + 5. Blank means no filter. |
+
+Success returns { query, page, totalResults, totalPages, results: [{ imdbId, title, year, type, poster }] }. Poster N/A or an unapproved image URL becomes null; missing years become an empty string and are omitted in the UI. No raw upstream objects or invented ratings/runtime/plots are returned. Results are deduped by IMDb ID, episodes are dropped unless explicitly requested, and page 1 uses a stable partition to pin exact case-insensitive title matches. The remainder keeps OMDb's ordering. totalResults is the provider's count before per-page deduplication/episode filtering; totalPages is ceil(totalResults / 10), capped at the API's 100 accessible pages.
+
+An exact-ID API query returns the same empty-results envelope plus redirect: /search?title=tt... without making an upstream call. OMDb Movie not found! is a normal 200 empty result and may be cached. Too many results. returns 422 REFINE_QUERY, inviting a more specific query/type/year. Quota, invalid-key, malformed-response, HTTP, and timeout failures return 502 SOURCE_UNAVAILABLE. Validation is 400; throttling is 429 RATE_LIMITED. Every error uses { error: { code, message } }, and no error response is cached.
+
+The API has the existing 30 requests/minute/IP search convention and global 300 requests/15 minutes/IP limit. Each upstream search has a four-second timeout and 1 MiB response limit. Structured search events include query length, page/filter metadata, cache hit/miss, counts, and sanitized failure status; never API keys or provider error/configuration payloads. The existing HTTP access logger remains in place.
+
+### Cache and source policy
+
+Search pages use v1:results: plus JSON-encoded normalized lowercase query/page/type/year, avoiding key collisions. They share the existing one-hour, 500-entry LRU with details/title mappings/seasons, but are limited to 100 entries and evict the oldest results page when that quota is full. Up to the first 100 search insertions can displace older shared-cache entries; sustained search-only churn cannot replace the entire details/season cache. Cache reset clears every namespace. Simultaneous identical result requests are coalesced; failures leave no entry. Exact-ID details use v4:details: and legacy title details retain v3:search:.
+
+OMDb is the sole results provider. Optional TMDB multi-search fallback and lazy result-card rating enrichment were deliberately left out: the chooser makes one provider call per page and works with only the OMDb key. Selecting a card triggers the existing enriched details route. Missing/broken posters have a consistent film placeholder. Changing search state aborts stale requests and generation guards prevent old responses from replacing newer results. Loading skeletons, empty/refinement/error/retry states, semantic lists, accessible link names, a live result count, visible focus, heading focus, and keyboard-operable filters/pagination are included.
+
+OMDb's [current parameter documentation](https://www.omdbapi.com/) confirms s, page 1–100, type, y, i, and totalResults. Its official issue tracker documents [ten results per page](https://github.com/omdbapi/OMDb-API/issues/170), [Search result fields](https://github.com/omdbapi/OMDb-API/issues/139), and [overly broad query errors](https://github.com/omdbapi/OMDb-API/issues/164). Checked October 16, 2026. Search results lack detail ratings/plots/runtime, so those are neither fabricated nor eagerly fetched.
+
+### Search verification
+
+The existing Jest/Supertest suite is extended with offline tests for parameter boundaries, field mapping, exact IDs, stable ordering, dedupe/episode filtering, no-result/refinement/upstream errors, telemetry, rate limits, normalized cache keys, one-hour expiry, shared 500-entry/100-result quotas, coalescing, and exact-ID details. No frontend test framework, dependency, or build step was added. An isolated browser with mocked providers was used for search/filter/pagination, result selection, Back and scroll restoration, reload, history/recommendations, loading/empty/error/retry/refinement, stale response aborts, safe text, keyboard focus, broken posters, and desktop/mobile checks.
 
 ## TV series and aggregation
 
