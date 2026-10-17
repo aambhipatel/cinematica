@@ -17,6 +17,7 @@ COPY --chown=node:node --from=dependencies /app/node_modules ./node_modules
 COPY --chown=node:node package*.json ./
 COPY --chown=node:node app.js ./
 COPY --chown=node:node aggregation.js ./
+COPY --chown=node:node search-results.js ./
 COPY --chown=node:node imdb-top-100.json ./
 COPY --chown=node:node oscar-nominations.json ./
 COPY --chown=node:node views ./views

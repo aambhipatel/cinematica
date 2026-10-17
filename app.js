@@ -10,6 +10,7 @@ const pinoHttp = require('pino-http');
 const { randomUUID } = require('crypto');
 require('dotenv').config();
 const { createAggregation, searchKey, validId, formatWatchTime } = require('./aggregation');
+const { createResultsSearch, validateSearch, exactId, detailKey, safeResultsURL } = require('./search-results');
 
 // --- Production Structured Logger ---
 const logger = pino({
@@ -49,6 +50,7 @@ const searchCache = new LRUCache({
     ttl: 1000 * 60 * 60 // 1 hour TTL
 });
 const aggregation = createAggregation({ httpClient, cache: searchCache, logger });
+const resultsSearch = createResultsSearch({ httpClient, cache: searchCache, logger });
 
 // --- In-Memory Fast Oscar Database Indexing (O(1) Map) ---
 let oscarData = [];
@@ -153,7 +155,12 @@ const globalLimiter = rateLimit({
     max: 300,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
-    message: 'Too many requests from this IP address. Please try again later.'
+    message: 'Too many requests from this IP address. Please try again later.',
+    handler: (req, res) => {
+        const message = 'Too many requests from this IP address. Please try again later.';
+        if (req.path.startsWith('/api/')) return res.status(429).json({ error: { code: 'RATE_LIMITED', message } });
+        res.status(429).send(message);
+    }
 });
 app.use(globalLimiter);
 
@@ -184,12 +191,33 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.locals.formatWatchTime = formatWatchTime;
+app.locals.searchMode = false;
+app.locals.backToResults = null;
+app.locals.maxSearchYear = new Date().getFullYear() + 5;
+app.use((req, res, next) => {
+    res.locals.searchMode = ['/', '/search'].includes(req.path) && req.query.q !== undefined;
+    res.locals.backToResults = safeResultsURL(req.query.from);
+    res.locals.maxSearchYear = new Date().getFullYear() + 5;
+    next();
+});
 
 const episodeLimiter = rateLimit({
     windowMs: 60 * 1000, max: 30, standardHeaders: 'draft-7', legacyHeaders: false,
     handler: (req, res) => res.status(429).json({ error: { code: 'RATE_LIMITED', message: 'Too many episode requests. Please try again shortly.' } })
 });
 const apiError = (res, status, code, message) => res.status(status).json({ error: { code, message } });
+const resultsLimiter = rateLimit({
+    windowMs: 60 * 1000, max: 30, standardHeaders: 'draft-7', legacyHeaders: false,
+    handler: (req, res) => apiError(res, 429, 'RATE_LIMITED', 'Too many search requests. Please try again shortly.')
+});
+app.get('/api/search', resultsLimiter, async (req, res) => {
+    try {
+        const state = validateSearch(req.query);
+        res.json(await resultsSearch.search(state, req.log));
+    } catch (error) {
+        apiError(res, error.status || 502, error.code || 'SOURCE_UNAVAILABLE', error.status ? error.message : 'Search is temporarily unavailable. Please retry.');
+    }
+});
 function validateEpisodeRoute(req, res, next) {
     if (!validId(req.params.imdbId)) return apiError(res, 400, 'INVALID_ID', 'Use an IMDb title ID, such as tt0944947.');
     if (req.params.n !== undefined && (!/^(0|[1-9]\d{0,2})$/.test(req.params.n) || Number(req.params.n) > 200)) {
@@ -266,6 +294,15 @@ app.get('/api/spotlight', (req, res) => {
 });
 
 app.get('/search', searchLimiter, async (req, res) => {
+    if (req.query.q !== undefined) {
+        try {
+            const state = validateSearch(req.query);
+            if (exactId(state.query)) return res.redirect('/search?title=' + state.query);
+            return res.render('index', { movie: null, error: null });
+        } catch (error) {
+            return res.status(400).render('index', { movie: null, error: error.message });
+        }
+    }
     const rawTitle = req.query.title;
 
     // Strict input validation
@@ -278,7 +315,8 @@ app.get('/search', searchLimiter, async (req, res) => {
         return res.status(400).render('index', { movie: null, error: "Search query is too long (maximum 100 characters)." });
     }
 
-    const cacheKey = searchKey(movieTitle);
+    const isId = exactId(movieTitle);
+    const cacheKey = isId ? detailKey(movieTitle) : searchKey(movieTitle);
     const cachedResult = searchCache.get(cacheKey);
     if (cachedResult) {
         req.log.info({ cacheHit: true, title: movieTitle }, 'Cache hit resolving movie search');
@@ -289,7 +327,7 @@ app.get('/search', searchLimiter, async (req, res) => {
     try {
         const response = await httpClient.get('https://www.omdbapi.com/', {
             params: {
-                t: movieTitle,
+                ...(isId ? { i: movieTitle } : { t: movieTitle }),
                 apikey: API_KEY
             }
         });
@@ -365,5 +403,7 @@ module.exports = {
     aggregation,
     httpClient,
     searchKey,
-    episodeLimiter
+    episodeLimiter,
+    resultsSearch,
+    resultsLimiter
 };
