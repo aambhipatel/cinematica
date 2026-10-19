@@ -359,7 +359,7 @@
             </div>
 
             <!-- Features / Value Pillars Strip -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-8 max-w-4xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-8 max-w-4xl mx-auto">
                 <div class="p-5 rounded-2xl glass border border-white/5 flex items-start gap-4">
                     <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
                         <i class="fas fa-gauge-high text-sm"></i>
@@ -387,6 +387,16 @@
                     <div>
                         <h2 class="text-sm font-bold text-white mb-1">Production & Cast Intelligence</h2>
                         <p class="text-xs text-slate-400 leading-relaxed">Verified studio distributors, budgets, box office numbers, and actor filmography profiles.</p>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-2xl glass border border-white/5 flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                        <i class="fas fa-eye-slash text-sm" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white mb-1">Form Your Own Perspective</h2>
+                        <p class="text-xs text-slate-400 leading-relaxed">Ratings and reviews stay hidden by default to reduce bias, keeping objective details in focus so you can form your own impression before exploring critical opinion.</p>
                     </div>
                 </div>
             </div>
@@ -456,11 +466,6 @@
                             <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/10 group-hover:border-amber-500/40 group-hover:shadow-lg group-hover:shadow-amber-500/10 transition duration-300 mb-3 aspect-[2/3]">
                                 <img src="<%= item.img %>" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="h-full w-full object-cover group-hover:scale-105 transition duration-500" alt="<%= item.title %> poster" loading="lazy">
 
-                                <!-- Rating Badge overlay -->
-                                <div class="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md border border-white/10 text-[11px] font-bold text-amber-400">
-                                    <i class="fas fa-star text-[10px] text-amber-400"></i>
-                                    <span><%= item.rating %></span>
-                                </div>
 
                                 <!-- Graceful Fallback illustration if image fails -->
                                 <div class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-2xl p-4 text-center">
@@ -666,13 +671,19 @@
                                     { label: 'TMDB', value: movie.tmdbRating, max: 10, source: 'TMDB' }
                                 ].filter(r => Number.isFinite(Number(r.value)) && Number(r.value) > 0); %>
                                 <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3.5">
-                                    <% scores.forEach(score => { const percent = Math.min(100, Math.round(score.value / score.max * 100)); %>
+                                    <% // TV rings use the rating brand's logo color, not its upstream provider's color.
+                                       // TMDB uses its bright blue logo accent to stay visible on the dark ring track.
+                                       const tvRatingColors = { IMDb: '#f5c518', Tomatometer: '#fa320a', 'Rotten Tomatoes': '#fa320a', Metacritic: '#ffcc33', TMDB: '#01b4e4', TVMaze: '#3c948b' };
+                                       scores.forEach(score => {
+                                           const percent = Math.min(100, Math.round(score.value / score.max * 100));
+                                           const movieRingColor = score.label === 'IMDb' ? '#f5c518' : score.label === 'Tomatometer' ? '#f84a25' : score.label === 'Metacritic' ? '#66cc33' : '#f59e0b';
+                                           const ringColor = isSeries ? (tvRatingColors[score.label] || '#94a3b8') : movieRingColor; %>
                                         <div class="bg-slate-950/40 p-3.5 rounded-2xl border border-white/5 flex flex-col items-center text-center" title="via <%= score.source %>">
                                             <span class="text-[11px] text-slate-300 uppercase font-bold mb-2"><%= score.label %></span>
                                             <div class="relative w-14 h-14 flex items-center justify-center">
                                                 <svg class="w-full h-full circle-progress" viewBox="0 0 36 36" aria-hidden="true">
                                                     <circle cx="18" cy="18" r="15.9155" stroke-width="3" stroke="#1e293b" fill="none"/>
-                                                    <circle cx="18" cy="18" r="15.9155" pathLength="100" stroke-dasharray="<%= percent %> 100" stroke-width="3" stroke-linecap="round" stroke="<%= score.label === 'IMDb' ? '#f5c518' : score.label === 'Tomatometer' ? '#f84a25' : score.label === 'Metacritic' ? '#66cc33' : '#f59e0b' %>" fill="none"/>
+                                                    <circle cx="18" cy="18" r="15.9155" pathLength="100" stroke-dasharray="<%= percent %> 100" stroke-width="3" stroke-linecap="round" stroke="<%= ringColor %>" fill="none"/>
                                                 </svg>
                                                 <span class="absolute text-xs font-black text-white"><%= score.value %><span class="block text-[11px] text-slate-300">/<%= score.max %></span></span>
                                             </div>
@@ -741,14 +752,14 @@
 
                             <!-- Panel 1: Cast & Crew -->
                             <div id="castTab" role="tabpanel" aria-labelledby="btn-castTab" tabindex="0" class="tab-content block space-y-6">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <% if (!isSeries || hasValue(movie.Director)) { %><div class="bg-slate-950/30 border border-white/5 rounded-2xl p-4.5"><h4 class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Director</h4>
-                                        <p class="text-base font-bold text-white">
+                                <div class="grid grid-cols-1 gap-4">
+                                    <% if (!isSeries || hasValue(movie.Director)) { %><div class="bg-slate-950/30 border border-white/5 rounded-2xl p-5 sm:p-6 min-w-0"><h4 class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-3">Director</h4>
+                                        <p class="text-base font-bold text-white leading-relaxed break-words">
                                             <%= movie.Director !== "N/A" ? movie.Director : "Unknown" %>
                                         </p>
                                     </div><% } %>
-                                    <% if (!isSeries || hasValue(movie.Writer)) { %><div class="bg-slate-950/30 border border-white/5 rounded-2xl p-4.5"><h4 class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Writer</h4>
-                                        <p class="text-base font-bold text-white truncate" title="<%= movie.Writer %>">
+                                    <% if (!isSeries || hasValue(movie.Writer)) { %><div class="bg-slate-950/30 border border-white/5 rounded-2xl p-5 sm:p-6 min-w-0"><h4 class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-3">Writer</h4>
+                                        <p class="text-base font-bold text-white leading-relaxed break-words" title="<%= movie.Writer %>">
                                             <%= movie.Writer !== "N/A" ? movie.Writer : "Unknown" %>
                                         </p>
                                     </div><% } %>
@@ -841,7 +852,6 @@
                 <p>© 2026 Cinematica. Metadata via <a class="underline hover:text-white" href="https://www.omdbapi.com/">OMDb</a>, <a class="underline hover:text-white" href="https://www.themoviedb.org/">TMDB</a>, <a class="underline hover:text-white" href="https://www.tvmaze.com/">TVMaze</a>, and <a class="underline hover:text-white" href="https://www.wikidata.org/">Wikidata</a>.</p>
                 <p>TVMaze data is licensed under <a class="underline hover:text-white" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA</a>; Wikidata under CC0.</p>
                 <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
-                <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg" alt="TMDB" width="48" height="35" loading="lazy">
             </div>
             <div class="flex gap-4">
                 <a href="/" class="hover:text-amber-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded">Home</a>
@@ -1438,10 +1448,6 @@
                     <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/10 group-hover:border-amber-500/40 group-hover:shadow-lg group-hover:shadow-amber-500/10 transition duration-300 mb-3 aspect-[2/3]">
                         <img src="${escapeHTML(item.img)}" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" class="h-full w-full object-cover group-hover:scale-105 transition duration-500" alt="${escapeHTML(item.title)} poster" loading="lazy">
 
-                        <div class="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md border border-white/10 text-[11px] font-bold text-amber-400">
-                            <i class="fas fa-star text-[10px] text-amber-400"></i>
-                            <span>${escapeHTML(item.rating)}</span>
-                        </div>
 
                         <div class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-2xl p-4 text-center">
                             <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 mb-2">

@@ -12,11 +12,11 @@ Film enthusiasts, cinephiles, and researchers seeking a centralized, high-densit
 
 ## Product Purpose
 
-CineScope provides a unified cinematic dashboard aggregating critical consensus, historical awards records, and technical production data. Success means delivering instant, verified, and complete film intelligence through an intuitive, dense, and responsive search interface.
+Cinematica provides a unified cinematic dashboard aggregating critical consensus, historical awards records, and technical production data. Success means delivering instant, verified, and complete film intelligence through an intuitive, dense, and responsive search interface.
 
 ## Positioning
 
-Unlike generic search engines or fragmented single-purpose film databases, CineScope aggregates cross-referenced data from OMDb, TMDB, and an in-memory historical Oscar index. It presents multi-source critic dials (IMDb, Rotten Tomatoes, Metacritic), Oscar nominations & wins, verified box office & technical specs (studio, budget, runtime, MPAA rating), and cast filmographies within a single unified view.
+Unlike generic search engines or fragmented single-purpose film databases, Cinematica aggregates cross-referenced data from OMDb, TMDB, and an in-memory historical Oscar index. It presents multi-source critic dials (IMDb, Rotten Tomatoes, Metacritic), Oscar nominations & wins, verified box office & technical specs (studio, budget, runtime, MPAA rating), and cast filmographies within a single unified view.
 
 ## Operating Context
 
@@ -42,8 +42,8 @@ Unlike generic search engines or fragmented single-purpose film databases, CineS
 
 ## Brand Commitments
 
-- **Name:** CineScope
-- **Tone:** Premium cinematic command center: rich visual presentation, atmospheric dark theme, dense yet organized movie intelligence.
+- **Name:** Cinematica
+- **Tone:** Authentic 35mm cinematic screening room: warm amber projector lighting, nitrate charcoal surfaces, high typographic contrast, and authoritative film intelligence.
 
 ## Evidence on Hand
 
